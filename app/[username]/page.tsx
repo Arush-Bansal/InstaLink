@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Github, Instagram, Linkedin, Twitter, Globe, ShoppingBag, ExternalLink, Mail, ArrowUpRight } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { notFound, useParams } from "next/navigation";
 
 interface LinkData {
@@ -26,40 +27,65 @@ interface UserData {
   image: string;
   links: LinkData[];
   storeItems?: StoreItem[];
+  themeColor: string;
 }
+
+// Helper function to get theme colors
+const getThemeColors = (theme: string) => {
+  const themes: Record<string, { gradient: string; accent: string; ring: string }> = {
+    verdant: { 
+      gradient: 'from-emerald-900/20 via-background to-background', 
+      accent: 'from-emerald-500/20 to-green-500/20',
+      ring: 'from-emerald-400 via-green-500 to-teal-600'
+    },
+    indigo: { 
+      gradient: 'from-indigo-900/20 via-background to-background', 
+      accent: 'from-indigo-500/20 to-purple-500/20',
+      ring: 'from-yellow-400 via-red-500 to-purple-600'
+    },
+    purple: { 
+      gradient: 'from-purple-900/20 via-background to-background', 
+      accent: 'from-purple-500/20 to-pink-500/20',
+      ring: 'from-purple-400 via-pink-500 to-rose-600'
+    },
+    rose: { 
+      gradient: 'from-rose-900/20 via-background to-background', 
+      accent: 'from-rose-500/20 to-pink-500/20',
+      ring: 'from-rose-400 via-pink-500 to-red-600'
+    },
+    amber: { 
+      gradient: 'from-amber-900/20 via-background to-background', 
+      accent: 'from-amber-500/20 to-orange-500/20',
+      ring: 'from-amber-400 via-orange-500 to-red-600'
+    },
+    cyan: { 
+      gradient: 'from-cyan-900/20 via-background to-background', 
+      accent: 'from-cyan-500/20 to-blue-500/20',
+      ring: 'from-cyan-400 via-blue-500 to-indigo-600'
+    },
+  };
+  return themes[theme] || themes.indigo;
+};
+
+const fetchUser = async (username: string) => {
+  const res = await fetch(`/api/user/${username}`);
+  if (!res.ok) throw new Error('Failed to fetch user');
+  const data = await res.json();
+  return data.user;
+};
 
 export default function PublicProfile() {
   const params = useParams();
   const username = params?.username as string;
-  const [user, setUser] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'links' | 'shop'>('links');
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch(`/api/user/${username}`);
-        if (!response.ok) {
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-        const data = await response.json();
-        setUser(data.user);
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    if (username) {
-      fetchUser();
-    }
-  }, [username]);
+  const { data: user, isLoading, isError } = useQuery<UserData>({
+    queryKey: ['user', username],
+    queryFn: () => fetchUser(username),
+    enabled: !!username,
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <main className="min-h-screen pb-20">
         <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-background to-background" />
@@ -70,21 +96,23 @@ export default function PublicProfile() {
     );
   }
 
-  if (!user) {
+  if (isError || !user) {
     notFound();
   }
+
+  const themeColors = getThemeColors(user.themeColor || 'indigo');
 
   return (
     <main className="min-h-screen pb-20">
       {/* Background Elements */}
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-background to-background" />
+      <div className={`fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${themeColors.gradient}`} />
 
       <div className="max-w-3xl mx-auto px-4 pt-12 md:pt-20 space-y-8">
         
         {/* Header Section - Glass Card Style */}
         <div className="glass-card rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 animate-float">
           <div className="relative w-32 h-32 shrink-0">
-             <div className="w-full h-full rounded-full p-1 bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600">
+             <div className={`w-full h-full rounded-full p-1 bg-gradient-to-tr ${themeColors.ring}`}>
                 <div className="w-full h-full rounded-full bg-black overflow-hidden relative">
                    {user.image ? (
                      <Image src={user.image} alt={user.title} fill className="object-cover" />
@@ -137,7 +165,7 @@ export default function PublicProfile() {
             {user.links.map((link, i) => (
               <Card 
                 key={i} 
-                className={`group cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all overflow-hidden relative aspect-[4/3] flex flex-col justify-between p-5 border-white/5 bg-white/5 hover:bg-white/10 ${i === 0 ? 'col-span-2 md:col-span-2 aspect-[2/1] bg-gradient-to-br from-indigo-500/20 to-purple-500/20' : ''}`}
+                className={`group cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all overflow-hidden relative aspect-[4/3] flex flex-col justify-between p-5 border-white/5 bg-white/5 hover:bg-white/10 ${i === 0 ? `col-span-2 md:col-span-2 aspect-[2/1] bg-gradient-to-br ${themeColors.accent}` : ''}`}
               >
                 <a href={link.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10" />
                 <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">

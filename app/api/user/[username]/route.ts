@@ -32,12 +32,20 @@ export async function PUT(
     const { username } = await params;
     const body = await request.json();
 
-    // In a real app, we would verify the session/token here.
-    // For MVP, we trust the client knows the username.
+    // Sanitize body: exclude _id and only allow specific fields to be updated
+    const { _id, ...rest } = body;
+    const updateFields = {
+      title: rest.title,
+      bio: rest.bio,
+      image: rest.image,
+      links: rest.links,
+      storeItems: rest.storeItems,
+      themeColor: rest.themeColor
+    };
 
     const user = await User.findOneAndUpdate(
       { username: username.toLowerCase() },
-      { $set: body },
+      { $set: updateFields },
       { new: true }
     );
 

@@ -9,10 +9,10 @@
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-highlight: rgba(255, 255, 255, 0.15);
   
-  /* Accents */
+  /* Accents - Verdant Theme */
   --primary: #ffffff;
   --primary-foreground: #000000;
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 @layer base {
