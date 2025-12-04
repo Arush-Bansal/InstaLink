@@ -22,25 +22,47 @@ import {
   Smartphone,
   ArrowUpRight,
   Globe,
-  Mail
+  Mail,
+  BarChart2
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 
 // --- Interfaces ---
 
 interface Link {
+  id: string;
   title: string;
   url: string;
+  clicks?: number;
 }
 
 interface StoreItem {
+  id: string;
   title: string;
   image: string;
   price: string;
   url?: string;
+  clicks?: number;
 }
 
 interface UserData {
@@ -124,6 +146,215 @@ const importLinktree = async (url: string) => {
 };
 
 
+// --- Sortable Components ---
+
+function SortableLink({ link, index, user, setUser }: { link: Link, index: number, user: UserData, setUser: (u: UserData) => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className="flex gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 group hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
+    >
+      <div 
+        className="mt-3 text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
+        {...attributes} 
+        {...listeners}
+      >
+        <Settings className="w-4 h-4" />
+      </div>
+      <div className="flex-1 space-y-3">
+        <div className="flex justify-between items-center">
+           <Input 
+             placeholder="Link Title" 
+             value={link.title} 
+             onChange={e => {
+               const newLinks = [...user.links];
+               newLinks[index].title = e.target.value;
+               setUser({ ...user, links: newLinks });
+             }}
+             className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+           />
+           <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+              <BarChart2 className="w-3 h-3" />
+              <span>{link.clicks || 0}</span>
+           </div>
+        </div>
+        <Input 
+          placeholder="URL (https://...)" 
+          value={link.url} 
+          onChange={e => {
+            const newLinks = [...user.links];
+            newLinks[index].url = e.target.value;
+            setUser({ ...user, links: newLinks });
+          }}
+          className="bg-white/50 border-emerald-100 text-xs font-mono text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+        />
+      </div>
+      <Button 
+        size="icon" 
+        variant="ghost" 
+        className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
+        onClick={() => {
+          const newLinks = [...user.links];
+          newLinks.splice(index, 1);
+          setUser({ ...user, links: newLinks });
+        }}
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
+function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, index: number, user: UserData, setUser: (u: UserData) => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className="flex gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
+    >
+      <div 
+        className="w-24 h-24 rounded-lg bg-muted border border-border overflow-hidden relative shrink-0 group cursor-pointer touch-none"
+        {...attributes}
+        {...listeners}
+      >
+         {/* Separate click handler for image upload vs drag */}
+         <div 
+            className="absolute inset-0 z-10" 
+            onClick={(e) => {
+               // If it was a drag, don't trigger click. 
+               // But dnd-kit handles this mostly. 
+               // We need a way to trigger file upload.
+               // Let's use a small button for upload or double click?
+               // Or just rely on the fact that long press is drag, short click is click.
+               document.getElementById(`store-image-${item.id}`)?.click();
+            }}
+         />
+        {item.image ? (
+          <img src={item.image} alt="" className="w-full h-full object-cover pointer-events-none" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <ImageIcon className="w-8 h-8" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-emerald-900/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <span className="text-xs font-medium text-white">Upload (Click) <br/> Move (Hold)</span>
+        </div>
+        <div className="absolute top-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm">
+          <BarChart2 className="w-3 h-3" />
+          {item.clicks || 0}
+        </div>
+      </div>
+      <input 
+        id={`store-image-${item.id}`}
+        type="file" 
+        accept="image/*" 
+        className="hidden" 
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (file.size > 2 * 1024 * 1024) { toast.error("File too large"); return; }
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const newItems = [...user.storeItems];
+            newItems[index].image = reader.result as string;
+            setUser({ ...user, storeItems: newItems });
+          };
+          reader.readAsDataURL(file);
+        }}
+      />
+      <div className="flex-1 space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <Input 
+            placeholder="Product Title" 
+            value={item.title} 
+            onChange={e => {
+              const newItems = [...user.storeItems];
+              newItems[index].title = e.target.value;
+              setUser({ ...user, storeItems: newItems });
+            }}
+            className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+          />
+          <Input 
+            placeholder="Price" 
+            value={item.price} 
+            onChange={e => {
+              const newItems = [...user.storeItems];
+              newItems[index].price = e.target.value;
+              setUser({ ...user, storeItems: newItems });
+            }}
+            className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+          />
+        </div>
+        <Input 
+          placeholder="Or paste Image URL..." 
+          value={item.image} 
+          onChange={e => {
+            const newItems = [...user.storeItems];
+            newItems[index].image = e.target.value;
+            setUser({ ...user, storeItems: newItems });
+          }}
+          className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+        />
+        <Input 
+          placeholder="Product Link" 
+          value={item.url || ''} 
+          onChange={e => {
+            const newItems = [...user.storeItems];
+            newItems[index].url = e.target.value;
+            setUser({ ...user, storeItems: newItems });
+          }}
+          className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+        />
+      </div>
+      <Button 
+        size="icon" 
+        variant="ghost" 
+        className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
+        onClick={() => {
+          const newItems = [...user.storeItems];
+          newItems.splice(index, 1);
+          setUser({ ...user, storeItems: newItems });
+        }}
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
 // --- Main Component ---
 
 export default function Admin() {
@@ -152,10 +383,66 @@ export default function Admin() {
     enabled: !!username,
   });
 
+  // Helper for ID generation
+  const generateId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return Math.random().toString(36).substring(2, 15);
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 250, // Long press delay (250ms)
+        tolerance: 5, // Tolerance for movement during long press
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || !user) return;
+
+    if (active.id !== over.id) {
+      // Check if it's a link or store item based on active tab or ID existence
+      if (activeTab === 'links') {
+        const oldIndex = user.links.findIndex((item) => item.id === active.id);
+        const newIndex = user.links.findIndex((item) => item.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          setUser({
+            ...user,
+            links: arrayMove(user.links, oldIndex, newIndex),
+          });
+        }
+      } else if (activeTab === 'shop') {
+        const oldIndex = user.storeItems.findIndex((item) => item.id === active.id);
+        const newIndex = user.storeItems.findIndex((item) => item.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          setUser({
+            ...user,
+            storeItems: arrayMove(user.storeItems, oldIndex, newIndex),
+          });
+        }
+      }
+    }
+  };
+
   // Sync fetched data to local state for editing
   useEffect(() => {
     if (fetchedUser) {
-      setUser({ ...fetchedUser, storeItems: fetchedUser.storeItems || [] });
+      // Ensure all items have IDs
+      const linksWithIds = (fetchedUser.links || []).map((l: any) => ({ ...l, id: l._id || l.id || generateId() }));
+      const storeItemsWithIds = (fetchedUser.storeItems || []).map((s: any) => ({ ...s, id: s._id || s.id || generateId() }));
+      
+      setUser({ 
+        ...fetchedUser, 
+        links: linksWithIds,
+        storeItems: storeItemsWithIds 
+      });
     }
   }, [fetchedUser]);
 
@@ -181,7 +468,8 @@ export default function Admin() {
           title: data.title,
           bio: data.description,
           image: data.image || user.image,
-          links: [...user.links, ...data.links]
+          image: data.image || user.image,
+          links: [...user.links, ...data.links.map((l: any) => ({ ...l, id: generateId() }))]
         });
         toast.success('Imported successfully! Click Save to persist changes.');
         setImportUrl("");
@@ -383,51 +671,34 @@ export default function Admin() {
 
                 <div className="space-y-4">
                   <div className="flex justify-end">
-                    <Button onClick={() => setUser({ ...user, links: [...user.links, { title: '', url: '' }] })}>
+                    <Button onClick={() => setUser({ ...user, links: [{ id: generateId(), title: '', url: '' }, ...user.links] })}>
                       <Plus className="w-4 h-4 mr-2" /> Add Link
                     </Button>
                   </div>
-                  {user.links.map((link, i) => (
-                    <div key={i} className="flex gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 group hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300">
-                      <div className="mt-3 text-muted-foreground cursor-grab active:cursor-grabbing">
-                        <Settings className="w-4 h-4" />
+                  
+                  <DndContext 
+                    sensors={sensors} 
+                    collisionDetection={closestCenter} 
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext 
+                      items={user.links.map(l => l.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-3">
+                        {user.links.map((link, i) => (
+                          <SortableLink 
+                            key={link.id} 
+                            link={link} 
+                            index={i} 
+                            user={user} 
+                            setUser={setUser} 
+                          />
+                        ))}
                       </div>
-                      <div className="flex-1 space-y-3">
-                        <Input 
-                          placeholder="Link Title" 
-                          value={link.title} 
-                          onChange={e => {
-                            const newLinks = [...user.links];
-                            newLinks[i].title = e.target.value;
-                            setUser({ ...user, links: newLinks });
-                          }}
-                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
-                        />
-                        <Input 
-                          placeholder="URL (https://...)" 
-                          value={link.url} 
-                          onChange={e => {
-                            const newLinks = [...user.links];
-                            newLinks[i].url = e.target.value;
-                            setUser({ ...user, links: newLinks });
-                          }}
-                          className="bg-white/50 border-emerald-100 text-xs font-mono text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
-                        />
-                      </div>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
-                        onClick={() => {
-                          const newLinks = [...user.links];
-                          newLinks.splice(i, 1);
-                          setUser({ ...user, links: newLinks });
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
+                    </SortableContext>
+                  </DndContext>
+
                   {user.links.length === 0 && (
                     <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
                       No links added yet
@@ -441,103 +712,33 @@ export default function Admin() {
             {activeTab === 'shop' && (
               <div className="space-y-4">
                 <div className="flex justify-end">
-                  <Button onClick={() => setUser({ ...user, storeItems: [...user.storeItems, { title: '', price: '', image: '', url: '' }] })}>
+                  <Button onClick={() => setUser({ ...user, storeItems: [{ id: generateId(), title: '', price: '', image: '', url: '' }, ...user.storeItems] })}>
                     <Plus className="w-4 h-4 mr-2" /> Add Product
                   </Button>
                 </div>
-                {user.storeItems.map((item, i) => (
-                  <div key={i} className="flex gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300">
-                    <div 
-                      className="w-24 h-24 rounded-lg bg-muted border border-border overflow-hidden relative shrink-0 group cursor-pointer"
-                      onClick={() => document.getElementById(`store-image-${i}`)?.click()}
-                    >
-                      {item.image ? (
-                        <img src={item.image} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                          <ImageIcon className="w-8 h-8" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-emerald-900/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="text-xs font-medium text-white">Upload</span>
-                      </div>
-                    </div>
-                    <input 
-                      id={`store-image-${i}`}
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (file.size > 2 * 1024 * 1024) { toast.error("File too large"); return; }
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          const newItems = [...user.storeItems];
-                          newItems[i].image = reader.result as string;
-                          setUser({ ...user, storeItems: newItems });
-                        };
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                    <div className="flex-1 space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <Input 
-                          placeholder="Product Title" 
-                          value={item.title} 
-                          onChange={e => {
-                            const newItems = [...user.storeItems];
-                            newItems[i].title = e.target.value;
-                            setUser({ ...user, storeItems: newItems });
-                          }}
-                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+                
+                <DndContext 
+                  sensors={sensors} 
+                  collisionDetection={closestCenter} 
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={user.storeItems.map(item => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-3">
+                      {user.storeItems.map((item, i) => (
+                        <SortableStoreItem 
+                          key={item.id} 
+                          item={item} 
+                          index={i} 
+                          user={user} 
+                          setUser={setUser} 
                         />
-                        <Input 
-                          placeholder="Price" 
-                          value={item.price} 
-                          onChange={e => {
-                            const newItems = [...user.storeItems];
-                            newItems[i].price = e.target.value;
-                            setUser({ ...user, storeItems: newItems });
-                          }}
-                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
-                        />
-                      </div>
-                      <Input 
-                        placeholder="Or paste Image URL..." 
-                        value={item.image} 
-                        onChange={e => {
-                          const newItems = [...user.storeItems];
-                          newItems[i].image = e.target.value;
-                          setUser({ ...user, storeItems: newItems });
-                        }}
-                        className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
-                      />
-                      <Input 
-                        placeholder="Product Link" 
-                        value={item.url || ''} 
-                        onChange={e => {
-                          const newItems = [...user.storeItems];
-                          newItems[i].url = e.target.value;
-                          setUser({ ...user, storeItems: newItems });
-                        }}
-                        className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
-                      />
+                      ))}
                     </div>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
-                      onClick={() => {
-                        const newItems = [...user.storeItems];
-                        newItems.splice(i, 1);
-                        setUser({ ...user, storeItems: newItems });
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
+                  </SortableContext>
+                </DndContext>
               </div>
             )}
 

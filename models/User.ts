@@ -3,6 +3,8 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface ILink {
   title: string;
   url: string;
+  clicks?: number;
+  _id?: string;
 }
 
 export interface IStoreItem {
@@ -10,6 +12,8 @@ export interface IStoreItem {
   price: string;
   image: string;
   url: string;
+  clicks?: number;
+  _id?: string;
 }
 
 export interface IUser extends Document {
@@ -26,6 +30,7 @@ export interface IUser extends Document {
 const LinkSchema = new Schema<ILink>({
   title: { type: String, required: true },
   url: { type: String, required: true },
+  clicks: { type: Number, default: 0 },
 });
 
 const StoreItemSchema = new Schema<IStoreItem>({
@@ -33,6 +38,7 @@ const StoreItemSchema = new Schema<IStoreItem>({
   price: { type: String, required: true },
   image: { type: String, default: '' },
   url: { type: String, default: '#' },
+  clicks: { type: Number, default: 0 },
 });
 
 const UserSchema = new Schema<IUser>({

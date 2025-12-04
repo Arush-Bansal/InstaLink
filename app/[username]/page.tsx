@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Github, Instagram, Linkedin, Twitter, Globe, ShoppingBag, ExternalLink, Mail, ArrowUpRight, Search } from "lucide-react";
+import { Github, Instagram, Linkedin, Twitter, Globe, ShoppingBag, ExternalLink, Mail, ArrowUpRight, Search, Share2 } from "lucide-react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
@@ -13,6 +13,7 @@ import { notFound, useParams } from "next/navigation";
 interface LinkData {
   title: string;
   url: string;
+  _id?: string;
 }
 
 interface StoreItem {
@@ -20,6 +21,7 @@ interface StoreItem {
   image: string;
   price: string;
   url?: string;
+  _id?: string;
 }
 
 interface UserData {
@@ -34,39 +36,57 @@ interface UserData {
 
 // Helper function to get theme colors
 const getThemeColors = (theme: string) => {
-  const themes: Record<string, { gradient: string; accent: string; ring: string }> = {
+  const themes: Record<string, { gradient: string; accent: string; ring: string; text: string; bg: string }> = {
     verdant: { 
-      gradient: 'from-emerald-100 via-background to-background', 
-      accent: 'from-emerald-100 to-green-100',
-      ring: 'from-emerald-400 via-green-500 to-teal-600'
+      gradient: 'from-emerald-50 via-background to-background', 
+      accent: 'bg-emerald-500',
+      ring: 'ring-emerald-100',
+      text: 'text-emerald-900',
+      bg: 'bg-emerald-50/50'
     },
     indigo: { 
-      gradient: 'from-indigo-100 via-background to-background', 
-      accent: 'from-indigo-100 to-purple-100',
-      ring: 'from-indigo-400 via-purple-500 to-indigo-600'
+      gradient: 'from-indigo-50 via-background to-background', 
+      accent: 'bg-indigo-500',
+      ring: 'ring-indigo-100',
+      text: 'text-indigo-900',
+      bg: 'bg-indigo-50/50'
     },
     purple: { 
-      gradient: 'from-purple-100 via-background to-background', 
-      accent: 'from-purple-100 to-pink-100',
-      ring: 'from-purple-400 via-pink-500 to-rose-600'
+      gradient: 'from-purple-50 via-background to-background', 
+      accent: 'bg-purple-500',
+      ring: 'ring-purple-100',
+      text: 'text-purple-900',
+      bg: 'bg-purple-50/50'
     },
     rose: { 
-      gradient: 'from-rose-100 via-background to-background', 
-      accent: 'from-rose-100 to-pink-100',
-      ring: 'from-rose-400 via-pink-500 to-red-600'
+      gradient: 'from-rose-50 via-background to-background', 
+      accent: 'bg-rose-500',
+      ring: 'ring-rose-100',
+      text: 'text-rose-900',
+      bg: 'bg-rose-50/50'
     },
     amber: { 
-      gradient: 'from-amber-100 via-background to-background', 
-      accent: 'from-amber-100 to-orange-100',
-      ring: 'from-amber-400 via-orange-500 to-red-600'
+      gradient: 'from-amber-50 via-background to-background', 
+      accent: 'bg-amber-500',
+      ring: 'ring-amber-100',
+      text: 'text-amber-900',
+      bg: 'bg-amber-50/50'
     },
     cyan: { 
-      gradient: 'from-cyan-100 via-background to-background', 
-      accent: 'from-cyan-100 to-blue-100',
-      ring: 'from-cyan-400 via-blue-500 to-indigo-600'
+      gradient: 'from-cyan-50 via-background to-background', 
+      accent: 'bg-cyan-500',
+      ring: 'ring-cyan-100',
+      text: 'text-cyan-900',
+      bg: 'bg-cyan-50/50'
     },
   };
   return themes[theme] || themes.verdant;
+};
+
+const formatUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) return url;
+  return `https://${url}`;
 };
 
 const fetchUser = async (username: string) => {
@@ -88,13 +108,44 @@ export default function PublicProfile() {
     enabled: !!username,
   });
 
+  // Move useMemo before early returns to maintain hook order
+  const filteredStoreItems = useMemo(() => {
+    if (!user?.storeItems) return [];
+    if (!searchQuery) return user.storeItems;
+
+    const fuse = new Fuse(user.storeItems, {
+      keys: ['title', 'price'],
+      threshold: 0.4,
+    });
+
+    return fuse.search(searchQuery).map(result => result.item);
+  }, [user?.storeItems, searchQuery]);
+
+  const handleLinkClick = async (itemId: string | undefined, type: 'link' | 'store') => {
+    console.log('handleLinkClick called', { itemId, type, username });
+    if (!itemId) {
+      console.warn('No itemId provided for click tracking');
+      return;
+    }
+    try {
+      await fetch('/api/analytics/click', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, itemId, type }),
+        keepalive: true,
+      });
+      console.log('Click tracking request sent');
+    } catch (error) {
+      console.error('Error tracking click:', error);
+    }
+  };
+
   if (isLoading) {
     return (
-      <main className="min-h-screen pb-20 bg-background text-foreground">
-        <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/50 via-background to-background" />
-        <div className="max-w-3xl mx-auto px-4 pt-12 md:pt-20 space-y-8">
-          <div className="text-center text-muted-foreground">Loading...</div>
-        </div>
+      <main className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
       </main>
     );
   }
@@ -105,34 +156,27 @@ export default function PublicProfile() {
 
   const themeColors = getThemeColors(user.themeColor || 'indigo');
 
-  const filteredStoreItems = useMemo(() => {
-    if (!user?.storeItems) return [];
-    if (!searchQuery) return user.storeItems;
-
-    const fuse = new Fuse(user.storeItems, {
-      keys: ['title', 'price'],
-      threshold: 0.4, // Adjusts sensitivity: 0.0 is exact match, 1.0 is match anything
-    });
-
-    return fuse.search(searchQuery).map(result => result.item);
-  }, [user?.storeItems, searchQuery]);
-
   return (
-    <main className="min-h-screen pb-20 bg-emerald-50/30 text-slate-900">
-      {/* Background Elements */}
-      <div className={`fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${themeColors.gradient}`} />
+    <main className="min-h-screen pb-20 bg-background text-foreground overflow-x-hidden">
+      {/* Dynamic Background */}
+      <div className={`fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${themeColors.gradient} opacity-60`} />
+      
+      {/* Decorative Blur Orbs */}
+      <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-br from-white/40 to-transparent blur-3xl opacity-50 -z-10" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-tl from-white/40 to-transparent blur-3xl opacity-50 -z-10" />
 
-      <div className="max-w-3xl mx-auto px-4 pt-12 md:pt-20 space-y-8">
+      <div className="max-w-2xl mx-auto px-4 pt-12 md:pt-20 space-y-10">
         
-        {/* Header Section - Glass Card Style */}
-        <div className="glass-card rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 animate-float">
-          <div className="relative w-32 h-32 shrink-0">
-             <div className={`w-full h-full rounded-full p-1 bg-gradient-to-tr ${themeColors.ring}`}>
-                <div className="w-full h-full rounded-full bg-white overflow-hidden relative">
+        {/* Header Section */}
+        <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="relative group">
+             <div className={`absolute -inset-0.5 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500 ${themeColors.accent}`} />
+             <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-white shadow-xl ring-1 ring-black/5">
+                <div className="w-full h-full rounded-full bg-muted overflow-hidden relative">
                    {user.image ? (
-                     <Image src={user.image} alt={user.title} fill className="object-cover" />
+                     <Image src={user.image} alt={user.title} fill className="object-cover" priority />
                    ) : (
-                     <div className="w-full h-full bg-emerald-50 flex items-center justify-center text-4xl uppercase text-emerald-600">
+                     <div className={`w-full h-full flex items-center justify-center text-5xl font-light uppercase ${themeColors.bg} ${themeColors.text}`}>
                        {user.username.charAt(0)}
                      </div>
                    )}
@@ -140,119 +184,174 @@ export default function PublicProfile() {
              </div>
           </div>
           
-          <div className="flex-1 text-center md:text-left space-y-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">{user.title}</h1>
-              <p className="text-muted-foreground mt-2">{user.bio}</p>
-            </div>
-            
-            <div className="flex gap-3 justify-center md:justify-start">
-               <Button size="sm" variant="outline" className="rounded-full">
-                 <Mail className="w-4 h-4 mr-2" /> Contact
-               </Button>
-               <Button size="sm" variant="outline" className="rounded-full">
-                 <Globe className="w-4 h-4 mr-2" /> Website
-               </Button>
-            </div>
+          <div className="space-y-2 max-w-lg">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">{user.title}</h1>
+            <p className="text-lg text-slate-600 font-light leading-relaxed">{user.bio}</p>
+          </div>
+          
+          <div className="flex flex-wrap gap-3 justify-center">
+             <Button size="sm" variant="outline" className="rounded-full px-6 border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+               <Mail className="w-4 h-4 mr-2" /> Contact
+             </Button>
+             <Button size="sm" variant="outline" className="rounded-full px-6 border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+               <Share2 className="w-4 h-4 mr-2" /> Share
+             </Button>
           </div>
         </div>
 
-
-        {/* Tabs */}
-        <div className="flex p-1 bg-white/50 rounded-xl backdrop-blur-sm border border-emerald-100 shadow-sm">
-          <button 
-            onClick={() => setActiveTab('links')}
-            className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === 'links' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            Quick Links
-          </button>
-          <button 
-            onClick={() => setActiveTab('shop')}
-            className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            Shop
-          </button>
+        {/* Navigation Tabs */}
+        <div className="sticky top-6 z-30 flex justify-center">
+          <div className="p-1.5 bg-white/90 backdrop-blur-xl rounded-full border border-slate-200/80 shadow-sm flex items-center gap-1.5">
+            <button 
+              onClick={() => setActiveTab('links')}
+              className={`
+                relative flex items-center gap-2 py-2.5 px-6 text-sm font-medium rounded-full transition-all duration-300
+                ${activeTab === 'links' 
+                  ? `${themeColors.accent} text-white shadow-sm` 
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}
+              `}
+            >
+              <Globe className="w-4 h-4" />
+              <span>Links</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('shop')}
+              className={`
+                relative flex items-center gap-2 py-2.5 px-6 text-sm font-medium rounded-full transition-all duration-300
+                ${activeTab === 'shop' 
+                  ? `${themeColors.accent} text-white shadow-sm` 
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}
+              `}
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Shop</span>
+            </button>
+          </div>
         </div>
 
         {/* Content Area */}
-        {activeTab === 'links' ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {user.links.map((link, i) => (
-              <Card 
-                key={i} 
-                className={`group cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all overflow-hidden relative aspect-[4/3] flex flex-col justify-between p-5 border-emerald-100 bg-white hover:shadow-md hover:shadow-emerald-500/5 ${i === 0 ? `col-span-2 md:col-span-2 aspect-[2/1] bg-gradient-to-br ${themeColors.accent}` : ''}`}
-              >
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10" />
-                <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ArrowUpRight className="w-5 h-5 text-muted-foreground" />
-                </div>
-                
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors ${i === 0 ? 'bg-white/40' : 'bg-muted'}`}>
-                   <Globe className="w-5 h-5" />
-                </div>
-
-                <div>
-                  <h3 className={`font-semibold leading-tight text-foreground ${i === 0 ? 'text-xl' : 'text-base'}`}>{link.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{link.url.replace(/^https?:\/\//, '')}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Featured Store Items */}
-            {user.storeItems && user.storeItems.length > 0 ? (
-              <div>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-purple-400" /> Featured Products
-                </h2>
-
-                {user.storeItems.length > 2 && (
-                  <div className="relative mb-6">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search products..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20"
-                    />
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {filteredStoreItems.map((item, i) => (
-                    <div key={i} className="group relative aspect-square rounded-2xl overflow-hidden bg-white border border-emerald-100 shadow-sm">
-                        <Image 
-                          src={item.image} 
-                          alt={item.title} 
-                          fill 
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/80 via-emerald-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-end p-4">
-                          <h3 className="font-medium text-sm text-white">{item.title}</h3>
-                          <p className="text-xs text-white/80 mb-2">{item.price}</p>
-                          <Button size="sm" className="w-full rounded-lg bg-white text-emerald-900 hover:bg-white/90">Buy Now</Button>
+        <div className="min-h-[400px]">
+          {activeTab === 'links' ? (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+              {user.links.map((link, i) => (
+                <a 
+                  key={i}
+                  href={formatUrl(link.url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block group"
+                  onClick={() => handleLinkClick(link._id, 'link')}
+                >
+                  <Card className={`relative overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${i === 0 ? 'bg-slate-900 text-white' : 'bg-white hover:bg-slate-50'}`}>
+                    <div className="p-5 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${i === 0 ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-white group-hover:shadow-sm'}`}>
+                           <Globe className="w-5 h-5" />
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`font-semibold text-base truncate ${i === 0 ? 'text-white' : 'text-slate-900'}`}>{link.title}</h3>
+                          <p className={`text-xs truncate opacity-70 ${i === 0 ? 'text-white/80' : 'text-slate-500'}`}>{link.url.replace(/^https?:\/\//, '')}</p>
+                        </div>
+                      </div>
+                      <div className={`opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 ${i === 0 ? 'text-white' : 'text-slate-400'}`}>
+                        <ArrowUpRight className="w-5 h-5" />
+                      </div>
                     </div>
-                  ))}
+                  </Card>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500">
+              {/* Shop Header & Search */}
+              {user.storeItems && user.storeItems.length > 0 ? (
+                <>
+                  {user.storeItems.length > 2 && (
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input 
+                        placeholder="Search products..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-11 h-12 bg-white border-slate-200 focus:border-slate-900 focus:ring-slate-900/10 rounded-2xl shadow-sm"
+                      />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {filteredStoreItems.map((item, i) => (
+                      <div key={i} className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
+                          {item.url ? (
+                            <a 
+                              href={formatUrl(item.url)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative aspect-square overflow-hidden bg-slate-50 block"
+                              onClick={() => handleLinkClick(item._id, 'store')}
+                            >
+                              <Image 
+                                src={item.image} 
+                                alt={item.title} 
+                                fill 
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                              />
+                            </a>
+                          ) : (
+                            <div className="relative aspect-square overflow-hidden bg-slate-50">
+                              <Image 
+                                src={item.image} 
+                                alt={item.title} 
+                                fill 
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                              />
+                            </div>
+                          )}
+                          <div className="p-4 flex-1 flex flex-col">
+                            <h3 className="font-medium text-sm text-slate-900 line-clamp-2 mb-1">{item.title}</h3>
+                            <p className="text-sm font-semibold text-emerald-600 mb-3">{item.price}</p>
+                            {item.url ? (
+                              <a 
+                                href={formatUrl(item.url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full mt-auto"
+                                onClick={() => handleLinkClick(item._id, 'store')}
+                              >
+                                <Button size="sm" className="w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-none">
+                                  View
+                                </Button>
+                              </a>
+                            ) : (
+                              <Button size="sm" className="w-full mt-auto rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-none">
+                                View
+                              </Button>
+                            )}
+                          </div>
+                      </div>
+                    ))}
+                  </div>
+
                   {filteredStoreItems.length === 0 && (
-                     <div className="col-span-full text-center py-8 text-muted-foreground">
-                        No products found matching "{searchQuery}"
+                     <div className="text-center py-12 text-slate-400 bg-white rounded-3xl border border-dashed border-slate-200">
+                        <p>No products found matching "{searchQuery}"</p>
                      </div>
                   )}
+                </>
+              ) : (
+                <div className="text-center text-slate-400 py-20 bg-white/50 rounded-3xl border border-dashed border-slate-200">
+                  <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>No store items available yet</p>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground py-12">
-                <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No store items available yet</p>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
 
-        <div className="text-center pt-10 pb-6">
-           <p className="text-xs text-muted-foreground">Powered by InstaLink</p>
+        <div className="text-center py-8">
+           <a href="/" className="inline-flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-slate-900 transition-colors">
+             <span>Powered by</span>
+             <span className="font-bold text-slate-900">InstaLink</span>
+           </a>
         </div>
 
       </div>
