@@ -1,11 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Github, Instagram, Linkedin, Twitter, Globe, ShoppingBag, ExternalLink, Mail, ArrowUpRight } from "lucide-react";
+import { Github, Instagram, Linkedin, Twitter, Globe, ShoppingBag, ExternalLink, Mail, ArrowUpRight, Search } from "lucide-react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import Fuse from "fuse.js";
 import { notFound, useParams } from "next/navigation";
 
 interface LinkData {
@@ -78,6 +80,7 @@ export default function PublicProfile() {
   const params = useParams();
   const username = params?.username as string;
   const [activeTab, setActiveTab] = useState<'links' | 'shop'>('links');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: user, isLoading, isError } = useQuery<UserData>({
     queryKey: ['user', username],
@@ -101,6 +104,18 @@ export default function PublicProfile() {
   }
 
   const themeColors = getThemeColors(user.themeColor || 'indigo');
+
+  const filteredStoreItems = useMemo(() => {
+    if (!user?.storeItems) return [];
+    if (!searchQuery) return user.storeItems;
+
+    const fuse = new Fuse(user.storeItems, {
+      keys: ['title', 'price'],
+      threshold: 0.4, // Adjusts sensitivity: 0.0 is exact match, 1.0 is match anything
+    });
+
+    return fuse.search(searchQuery).map(result => result.item);
+  }, [user?.storeItems, searchQuery]);
 
   return (
     <main className="min-h-screen pb-20 bg-emerald-50/30 text-slate-900">
@@ -191,8 +206,21 @@ export default function PublicProfile() {
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5 text-purple-400" /> Featured Products
                 </h2>
+
+                {user.storeItems.length > 2 && (
+                  <div className="relative mb-6">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search products..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20"
+                    />
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {user.storeItems.map((item, i) => (
+                  {filteredStoreItems.map((item, i) => (
                     <div key={i} className="group relative aspect-square rounded-2xl overflow-hidden bg-white border border-emerald-100 shadow-sm">
                         <Image 
                           src={item.image} 
@@ -207,6 +235,11 @@ export default function PublicProfile() {
                         </div>
                     </div>
                   ))}
+                  {filteredStoreItems.length === 0 && (
+                     <div className="col-span-full text-center py-8 text-muted-foreground">
+                        No products found matching "{searchQuery}"
+                     </div>
+                  )}
                 </div>
               </div>
             ) : (
