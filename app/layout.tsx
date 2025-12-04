@@ -23,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${outfit.variable} antialiased selection:bg-white/20`}
       >
         {/* Ambient Background Glow */}
