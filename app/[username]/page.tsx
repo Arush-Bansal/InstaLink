@@ -149,13 +149,13 @@ export default function PublicProfile() {
             onClick={() => setActiveTab('links')}
             className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === 'links' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
           >
-            Links & Content
+            Quick Links
           </button>
           <button 
             onClick={() => setActiveTab('shop')}
             className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
           >
-            Shop & Store
+            Shop
           </button>
         </div>
 

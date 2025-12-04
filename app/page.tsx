@@ -65,7 +65,7 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col items-center justify-center p-4 md:p-24 relative z-10">
-        <div className="w-full max-w-4xl text-center space-y-8 animate-float">
+        <div className="w-full max-w-4xl text-center space-y-8">
           <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-4 shadow-xl shadow-emerald-900/10">
             <Sparkles className="w-4 h-4 text-emerald-400 mr-2" />
             <span className="text-sm font-medium text-white/90 tracking-wide">The Bio Link for Fashion Creators</span>
