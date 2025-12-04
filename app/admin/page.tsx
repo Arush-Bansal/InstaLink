@@ -243,10 +243,10 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="flex gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
+      className="flex flex-col sm:flex-row gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
     >
       <div 
-        className="w-24 h-24 rounded-lg bg-muted border border-border overflow-hidden relative shrink-0 group cursor-pointer touch-none"
+        className="w-full sm:w-24 h-48 sm:h-24 rounded-lg bg-muted border border-border overflow-hidden relative shrink-0 group cursor-pointer touch-none"
         {...attributes}
         {...listeners}
       >
@@ -296,7 +296,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
         }}
       />
       <div className="flex-1 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input 
             placeholder="Product Title" 
             value={item.title} 
@@ -468,7 +468,7 @@ export default function Admin() {
           title: data.title,
           bio: data.description,
           image: data.image || user.image,
-          image: data.image || user.image,
+
           links: [...user.links, ...data.links.map((l: any) => ({ ...l, id: generateId() }))]
         });
         toast.success('Imported successfully! Click Save to persist changes.');
@@ -514,8 +514,49 @@ export default function Admin() {
   return (
     <div className="flex h-screen bg-emerald-50/30 text-slate-900 overflow-hidden font-sans">
       
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-emerald-100 z-30 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2 font-bold text-lg text-foreground">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
+            <Share2 className="w-5 h-5" />
+          </div>
+          InstaLink
+        </div>
+        <div className="flex gap-2">
+           <Button size="icon" variant="ghost" onClick={() => window.open(`/${user.username}`, '_blank')}>
+             <ExternalLink className="w-5 h-5" />
+           </Button>
+           <Button size="icon" variant="ghost" className="text-red-500" onClick={handleLogout}>
+             <LogOut className="w-5 h-5" />
+           </Button>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Nav */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-emerald-100 z-30 flex justify-around items-center pb-4 px-2">
+        {[
+          { id: 'profile', label: 'Profile', icon: LayoutDashboard },
+          { id: 'links', label: 'Links', icon: LinkIcon },
+          { id: 'shop', label: 'Store', icon: ShoppingBag },
+          { id: 'appearance', label: 'Theme', icon: Palette },
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id as any)}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+              activeTab === item.id 
+                ? 'text-emerald-600' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <item.icon className={`w-6 h-6 ${activeTab === item.id ? 'fill-current' : ''}`} />
+            <span className="text-[10px] font-medium">{item.label}</span>
+          </button>
+        ))}
+      </div>
+
       {/* 1. Sidebar Navigation */}
-      <aside className="w-64 border-r border-emerald-100 flex flex-col bg-white/80 backdrop-blur-xl z-20">
+      <aside className="hidden md:flex w-64 border-r border-emerald-100 flex-col bg-white/80 backdrop-blur-xl z-20">
         <div className="p-6 border-b border-emerald-100">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-foreground">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
@@ -566,8 +607,8 @@ export default function Admin() {
       </aside>
 
       {/* 2. Main Content Editor */}
-      <main className="flex-1 overflow-y-auto relative">
-        <div className="max-w-3xl mx-auto p-8 pb-32">
+      <main className="flex-1 overflow-y-auto relative pt-16 md:pt-0">
+        <div className="max-w-3xl mx-auto p-4 md:p-8 pb-32">
           
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
@@ -747,7 +788,7 @@ export default function Admin() {
               <Card className="p-6 space-y-6 bg-white/60 backdrop-blur-sm border-emerald-100 shadow-sm hover:shadow-emerald-500/5 transition-all">
                 <div className="space-y-4">
                   <h3 className="font-medium">Theme Color</h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
                       { name: 'verdant', color: 'from-emerald-500 to-green-600', border: 'border-emerald-500' },
                       { name: 'indigo', color: 'from-indigo-500 to-purple-600', border: 'border-indigo-500' },
