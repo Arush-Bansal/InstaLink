@@ -24,17 +24,17 @@ export default function RootLayout({
     <html lang="en">
       <body
         suppressHydrationWarning
-        className={`${outfit.variable} antialiased selection:bg-white/20`}
+        className={`${outfit.variable} antialiased selection:bg-emerald-500/30`}
       >
         {/* Ambient Background Glow */}
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-500/10 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-green-500/10 blur-[120px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-500/15 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-green-500/15 blur-[120px]" />
         </div>
         
         <QueryProvider>
           {children}
-          <Toaster position="top-center" theme="dark" />
+          <Toaster position="top-center" theme="light" />
         </QueryProvider>
       </body>
     </html>

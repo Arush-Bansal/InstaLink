@@ -55,20 +55,20 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col relative overflow-hidden bg-[#0a0a0a]">
+    <main className="flex min-h-screen flex-col relative overflow-hidden bg-emerald-50/30 text-slate-900">
       
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-emerald-500/15 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px]" />
       </div>
 
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col items-center justify-center p-4 md:p-24 relative z-10">
         <div className="w-full max-w-4xl text-center space-y-8">
-          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-4 shadow-xl shadow-emerald-900/10">
-            <Sparkles className="w-4 h-4 text-emerald-400 mr-2" />
-            <span className="text-sm font-medium text-white/90 tracking-wide">The Bio Link for Fashion Creators</span>
+          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full border border-emerald-100 bg-white/60 backdrop-blur-md mb-4 shadow-sm shadow-emerald-900/5">
+            <Sparkles className="w-4 h-4 text-emerald-600 mr-2" />
+            <span className="text-sm font-medium text-emerald-900/80 tracking-wide">The Bio Link for Fashion Creators</span>
           </div>
           
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-tight">
@@ -76,14 +76,14 @@ export default function Home() {
             <span className="text-gradient">Runway Awaits</span>
           </h1>
           
-          <p className="text-lg md:text-2xl text-white/60 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-2xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Turn your followers into customers with a bio page designed for the visual web. Higher clicks, better conversion, and editorial-grade aesthetics.
           </p>
 
           {loggedInUser ? (
              <div className="flex flex-col items-center gap-4 mt-10">
-               <div className="text-xl font-medium text-white/80">
-                 Welcome back, <span className="text-emerald-400">@{loggedInUser.username}</span>
+               <div className="text-xl font-medium text-foreground/80">
+                 Welcome back, <span className="text-emerald-600">@{loggedInUser.username}</span>
                </div>
                <Button 
                  size="lg" 
@@ -98,7 +98,7 @@ export default function Home() {
                    localStorage.removeItem('instaLinkUser');
                    setLoggedInUser(null);
                  }}
-                 className="text-sm text-white/40 hover:text-white/60 transition-colors"
+                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                >
                  LogOut
                </button>
@@ -106,10 +106,10 @@ export default function Home() {
           ) : (
             <form onSubmit={handleLogin} className="flex flex-col md:flex-row gap-4 max-w-lg mx-auto mt-12 w-full">
               <div className="relative flex-grow">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 font-medium">instalink.com/</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-medium">instalink.com/</span>
                 <Input 
                   placeholder="yourname" 
-                  className="h-14 pl-32 text-lg bg-white/5 border-white/10 focus:border-emerald-500/50 transition-all rounded-xl"
+                  className="h-14 pl-32 text-lg bg-white border-emerald-100 focus:border-emerald-500 transition-all rounded-xl text-foreground placeholder:text-muted-foreground/50 shadow-sm"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoading}
@@ -127,7 +127,7 @@ export default function Home() {
             </form>
           )}
           
-          <div className="pt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-white/40 text-sm font-medium uppercase tracking-wider">
+          <div className="pt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-muted-foreground/80 text-sm font-medium uppercase tracking-wider">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-500" />
               <span>3x Higher Conversion</span>
@@ -145,13 +145,13 @@ export default function Home() {
       </section>
 
       {/* Value Proposition Section */}
-      <section className="py-32 px-4 md:px-24 bg-white/5 backdrop-blur-sm border-y border-white/10 relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
+      <section className="py-32 px-4 md:px-24 bg-emerald-50/30 backdrop-blur-sm border-y border-emerald-100 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full bg-gradient-to-b from-emerald-100/20 to-transparent pointer-events-none" />
         
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-20">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Designed for <span className="text-gradient">Visual Storytellers</span></h2>
-            <p className="text-white/60 text-xl max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-slate-900">Designed for <span className="text-gradient">Visual Storytellers</span></h2>
+            <p className="text-slate-600 text-xl max-w-3xl mx-auto">
               Fashion isn't just about links; it's about the look. Standard bio tools are text-heavy and boring. InstaLink is built to showcase your aesthetic and drive sales.
             </p>
           </div>
@@ -161,25 +161,25 @@ export default function Home() {
               {
                 title: "Shop Your Look",
                 description: "Seamlessly integrate affiliate links and product pages. Make it easy for followers to buy what you're wearing.",
-                icon: <ShoppingBag className="w-8 h-8 text-pink-400" />
+                icon: <ShoppingBag className="w-8 h-8 text-teal-500" />
               },
               {
                 title: "Visual-First Layouts",
                 description: "Break free from the list. Use grids, carousels, and hero images to create a mini-website that feels like a magazine.",
-                icon: <Layout className="w-8 h-8 text-blue-400" />
+                icon: <Layout className="w-8 h-8 text-emerald-500" />
               },
               {
                 title: "Brand Partnerships",
                 description: "Showcase your collaborations with dedicated sections that highlight your partners and drive ROI.",
-                icon: <Sparkles className="w-8 h-8 text-yellow-400" />
+                icon: <Sparkles className="w-8 h-8 text-green-500" />
               }
             ].map((feature, i) => (
-              <div key={i} className="glass-card p-10 rounded-3xl hover:bg-white/10 transition-all duration-500 group border border-white/5 hover:border-emerald-500/20">
-                <div className="mb-6 p-4 bg-white/5 rounded-2xl w-fit group-hover:scale-110 transition-transform duration-500">
+              <div key={i} className="glass-card p-10 rounded-3xl hover:bg-white/80 transition-all duration-500 group border border-emerald-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-500/10">
+                <div className="mb-6 p-4 bg-emerald-50 rounded-2xl w-fit group-hover:scale-110 transition-transform duration-500">
                   {feature.icon}
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-emerald-400 transition-colors">{feature.title}</h3>
-                <p className="text-white/60 leading-relaxed text-lg">{feature.description}</p>
+                <h3 className="text-2xl font-bold mb-4 text-slate-900 group-hover:text-emerald-600 transition-colors">{feature.title}</h3>
+                <p className="text-slate-600 leading-relaxed text-lg">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -191,10 +191,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-20 gap-8">
             <div>
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">From Post to <span className="text-gradient">Purchase</span></h2>
-              <p className="text-white/60 text-lg max-w-md">Your audience wants to know where you got that. Tell them in seconds.</p>
+              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-slate-900">From Post to <span className="text-gradient">Purchase</span></h2>
+              <p className="text-slate-600 text-lg max-w-md">Your audience wants to know where you got that. Tell them in seconds.</p>
             </div>
-            <Button variant="outline" className="rounded-full px-8 border-white/20 hover:bg-white/10">
+            <Button variant="outline" className="rounded-full px-8 border-emerald-100 hover:bg-emerald-50 text-foreground">
               Start Building Now
             </Button>
           </div>
@@ -221,11 +221,11 @@ export default function Home() {
               }
             ].map((step, i) => (
               <div key={i} className="relative z-10 flex flex-col items-start md:items-center text-left md:text-center group">
-                <div className="w-20 h-20 rounded-full bg-[#0a0a0a] border-2 border-emerald-500/30 flex items-center justify-center text-2xl font-bold text-emerald-400 mb-8 shadow-[0_0_30px_-5px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform duration-300">
+                <div className="w-20 h-20 rounded-full bg-white border-2 border-emerald-100 flex items-center justify-center text-2xl font-bold text-emerald-600 mb-8 shadow-lg shadow-emerald-100 group-hover:scale-110 transition-transform duration-300">
                   {step.step}
                 </div>
-                <h3 className="text-2xl font-bold mb-4 group-hover:text-emerald-400 transition-colors">{step.title}</h3>
-                <p className="text-white/60 max-w-xs text-lg leading-relaxed">{step.description}</p>
+                <h3 className="text-2xl font-bold mb-4 group-hover:text-emerald-600 transition-colors text-slate-900">{step.title}</h3>
+                <p className="text-slate-600 max-w-xs text-lg leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>
@@ -233,7 +233,7 @@ export default function Home() {
       </section>
 
       {/* Social Proof / Testimonials */}
-      <section className="py-32 px-4 md:px-24 bg-white/5 backdrop-blur-sm border-y border-white/10">
+      <section className="py-32 px-4 md:px-24 bg-emerald-50/30 backdrop-blur-sm border-y border-emerald-100">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-bold text-center mb-20">Trusted by <span className="text-gradient">Style Icons</span></h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -264,13 +264,13 @@ export default function Home() {
                       <Sparkles key={star} className="w-4 h-4 text-emerald-400 fill-emerald-400" />
                     ))}
                   </div>
-                  <p className="text-xl text-white/90 mb-8 font-light italic">"{testimonial.quote}"</p>
+                  <p className="text-xl text-slate-700 mb-8 font-light italic">"{testimonial.quote}"</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-400 to-blue-500" />
                   <div>
-                    <div className="font-bold text-white">{testimonial.author}</div>
-                    <div className="text-sm text-white/40">{testimonial.role}</div>
+                    <div className="font-bold text-slate-900">{testimonial.author}</div>
+                    <div className="text-sm text-slate-500">{testimonial.role}</div>
                   </div>
                 </div>
               </div>
@@ -298,9 +298,9 @@ export default function Home() {
                 a: "We focus specifically on visual creators. Our layouts, themes, and features are built to showcase imagery and drive conversion, not just list text links."
               }
             ].map((faq, i) => (
-              <div key={i} className="glass-card p-8 rounded-2xl hover:border-emerald-500/30 transition-colors">
-                <h3 className="text-xl font-bold mb-3 text-white">{faq.q}</h3>
-                <p className="text-white/60 text-lg leading-relaxed">{faq.a}</p>
+              <div key={i} className="glass-card p-8 rounded-2xl border border-emerald-100 hover:border-emerald-300 transition-colors">
+                <h3 className="text-xl font-bold mb-3 text-slate-900">{faq.q}</h3>
+                <p className="text-slate-600 text-lg leading-relaxed">{faq.a}</p>
               </div>
             ))}
           </div>
@@ -308,15 +308,15 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-white/10 text-center text-white/40 bg-black">
+      <footer className="py-12 px-4 border-t border-emerald-100 text-center text-muted-foreground bg-white">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <Zap className="w-6 h-6 text-emerald-400" />
-          <span className="font-bold text-2xl text-white tracking-tight">InstaLink</span>
+          <Zap className="w-6 h-6 text-emerald-500" />
+          <span className="font-bold text-2xl text-foreground tracking-tight">InstaLink</span>
         </div>
         <div className="flex justify-center gap-8 mb-8">
-          <a href="#" className="hover:text-emerald-400 transition-colors">Terms</a>
-          <a href="#" className="hover:text-emerald-400 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-emerald-400 transition-colors">Contact</a>
+          <a href="#" className="hover:text-emerald-600 transition-colors">Terms</a>
+          <a href="#" className="hover:text-emerald-600 transition-colors">Privacy</a>
+          <a href="#" className="hover:text-emerald-600 transition-colors">Contact</a>
         </div>
         <p>&copy; 2024 InstaLink. Designed for Creators.</p>
       </footer>

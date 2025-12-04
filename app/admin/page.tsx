@@ -58,37 +58,37 @@ interface UserData {
 const getThemeColors = (theme: string) => {
   const themes: Record<string, { gradient: string; accent: string; ring: string }> = {
     verdant: { 
-      gradient: 'from-emerald-900/20 via-background to-background', 
-      accent: 'from-emerald-500/20 to-green-500/20',
+      gradient: 'from-emerald-100 via-background to-background', 
+      accent: 'from-emerald-100 to-green-100',
       ring: 'from-emerald-400 via-green-500 to-teal-600'
     },
     indigo: { 
-      gradient: 'from-indigo-900/20 via-background to-background', 
-      accent: 'from-indigo-500/20 to-purple-500/20',
-      ring: 'from-yellow-400 via-red-500 to-purple-600'
+      gradient: 'from-indigo-100 via-background to-background', 
+      accent: 'from-indigo-100 to-purple-100',
+      ring: 'from-indigo-400 via-purple-500 to-indigo-600'
     },
     purple: { 
-      gradient: 'from-purple-900/20 via-background to-background', 
-      accent: 'from-purple-500/20 to-pink-500/20',
+      gradient: 'from-purple-100 via-background to-background', 
+      accent: 'from-purple-100 to-pink-100',
       ring: 'from-purple-400 via-pink-500 to-rose-600'
     },
     rose: { 
-      gradient: 'from-rose-900/20 via-background to-background', 
-      accent: 'from-rose-500/20 to-pink-500/20',
+      gradient: 'from-rose-100 via-background to-background', 
+      accent: 'from-rose-100 to-pink-100',
       ring: 'from-rose-400 via-pink-500 to-red-600'
     },
     amber: { 
-      gradient: 'from-amber-900/20 via-background to-background', 
-      accent: 'from-amber-500/20 to-orange-500/20',
+      gradient: 'from-amber-100 via-background to-background', 
+      accent: 'from-amber-100 to-orange-100',
       ring: 'from-amber-400 via-orange-500 to-red-600'
     },
     cyan: { 
-      gradient: 'from-cyan-900/20 via-background to-background', 
-      accent: 'from-cyan-500/20 to-blue-500/20',
+      gradient: 'from-cyan-100 via-background to-background', 
+      accent: 'from-cyan-100 to-blue-100',
       ring: 'from-cyan-400 via-blue-500 to-indigo-600'
     },
   };
-  return themes[theme] || themes.indigo;
+  return themes[theme] || themes.verdant;
 };
 
 // --- API Functions ---
@@ -218,19 +218,19 @@ export default function Admin() {
 
   // --- Render Helpers ---
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white"><Loader2 className="animate-spin" /></div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><Loader2 className="animate-spin" /></div>;
   if (!user) return null;
 
-  const themeColors = getThemeColors(user.themeColor || 'indigo');
+  const themeColors = getThemeColors(user.themeColor || 'verdant');
 
   return (
-    <div className="flex h-screen bg-[#0a0a0a] text-white overflow-hidden font-sans">
+    <div className="flex h-screen bg-emerald-50/30 text-slate-900 overflow-hidden font-sans">
       
       {/* 1. Sidebar Navigation */}
-      <aside className="w-64 border-r border-white/10 flex flex-col bg-black/40 backdrop-blur-xl z-20">
-        <div className="p-6 border-b border-white/5">
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-black">
+      <aside className="w-64 border-r border-emerald-100 flex flex-col bg-white/80 backdrop-blur-xl z-20">
+        <div className="p-6 border-b border-emerald-100">
+          <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-foreground">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
               <Share2 className="w-5 h-5" />
             </div>
             InstaLink
@@ -249,8 +249,8 @@ export default function Admin() {
               onClick={() => setActiveTab(item.id as any)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                 activeTab === item.id 
-                  ? 'bg-white/10 text-white shadow-lg shadow-black/20' 
-                  : 'text-white/40 hover:text-white hover:bg-white/5'
+                  ? 'bg-emerald-100/50 text-emerald-900 shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-emerald-50/50'
               }`}
             >
               <item.icon className="w-4 h-4" />
@@ -259,17 +259,17 @@ export default function Admin() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5 space-y-2">
+        <div className="p-4 border-t border-emerald-100 space-y-2">
           <Button 
             variant="outline" 
-            className="w-full justify-start text-white/60 hover:text-white border-white/10 hover:bg-white/5"
+            className="w-full justify-start text-muted-foreground hover:text-foreground border-emerald-100 hover:bg-emerald-50/50"
             onClick={() => window.open(`/${user.username}`, '_blank')}
           >
             <ExternalLink className="w-4 h-4 mr-2" /> View Live
           </Button>
           <Button 
             variant="ghost" 
-            className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
+            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4 mr-2" /> Logout
@@ -284,10 +284,10 @@ export default function Admin() {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold capitalize">{activeTab}</h1>
-              <p className="text-white/40 text-sm mt-1">Manage your {activeTab} settings</p>
+              <h1 className="text-3xl font-bold capitalize text-foreground">{activeTab}</h1>
+              <p className="text-muted-foreground text-sm mt-1">Manage your {activeTab} settings</p>
             </div>
-            <Button onClick={handleSave} disabled={saveMutation.isPending} className="shadow-lg shadow-emerald-500/20">
+            <Button onClick={handleSave} disabled={saveMutation.isPending} variant="gradient" className="shadow-lg shadow-emerald-500/20">
               {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" /> Save Changes</>}
             </Button>
 
@@ -298,24 +298,24 @@ export default function Admin() {
             
             {/* PROFILE TAB */}
             {activeTab === 'profile' && (
-              <Card className="p-6 space-y-6 bg-white/5 border-white/10">
+              <Card className="p-6 space-y-6 bg-white/60 backdrop-blur-sm border-emerald-100 shadow-sm hover:shadow-emerald-500/5 transition-all">
                 <div className="space-y-4">
                   <div className="flex items-center gap-6">
-                    <div className="relative w-24 h-24 rounded-full overflow-hidden bg-white/5 border-2 border-white/10 group cursor-pointer" onClick={() => document.getElementById('file-upload')?.click()}>
+                    <div className="relative w-24 h-24 rounded-full overflow-hidden bg-muted border-2 border-border group cursor-pointer" onClick={() => document.getElementById('file-upload')?.click()}>
                       {user.image ? (
                         <img src={user.image} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/20">
+                        <div className="w-full h-full flex items-center justify-center text-emerald-600 bg-emerald-50">
                           <ImageIcon className="w-8 h-8" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="text-xs font-medium">Change</span>
+                      <div className="absolute inset-0 bg-emerald-900/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xs font-medium text-white">Change</span>
                       </div>
                     </div>
                     <div className="flex-1 space-y-2">
-                      <h3 className="font-medium">Profile Image</h3>
-                      <p className="text-xs text-white/40">Recommended: 400x400px. Max 2MB.</p>
+                      <h3 className="font-medium text-foreground">Profile Image</h3>
+                      <p className="text-xs text-muted-foreground">Recommended: 400x400px. Max 2MB.</p>
                       <div className="flex gap-2">
                         <Button size="sm" variant="secondary" onClick={() => document.getElementById('file-upload')?.click()}>Upload</Button>
                         <input 
@@ -336,20 +336,20 @@ export default function Admin() {
                           placeholder="Or paste URL..." 
                           value={user.image} 
                           onChange={e => setUser({...user, image: e.target.value})}
-                          className="h-9 text-xs font-mono bg-black/20"
+                          className="h-9 text-xs font-mono bg-muted/50"
                         />
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/60">Display Name</label>
-                    <Input value={user.title} onChange={e => setUser({...user, title: e.target.value})} className="bg-black/20 border-white/10" />
+                    <label className="text-sm font-medium text-muted-foreground">Display Name</label>
+                    <Input value={user.title} onChange={e => setUser({...user, title: e.target.value})} className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all" />
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/60">Bio</label>
-                    <Input value={user.bio} onChange={e => setUser({...user, bio: e.target.value})} className="bg-black/20 border-white/10" />
+                    <label className="text-sm font-medium text-muted-foreground">Bio</label>
+                    <Input value={user.bio} onChange={e => setUser({...user, bio: e.target.value})} className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all" />
                   </div>
                 </div>
               </Card>
@@ -359,20 +359,20 @@ export default function Admin() {
             {activeTab === 'links' && (
               <div className="space-y-8">
                 {/* Import Tool */}
-                <Card className="p-4 bg-indigo-900/10 border-indigo-500/20 flex items-center gap-4">
-                  <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-400">
+                <Card className="p-4 bg-emerald-50/50 border-emerald-100 flex items-center gap-4">
+                  <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
                     <LinkIcon className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-indigo-200">Import from Linktree</h3>
-                    <p className="text-xs text-indigo-300/60">Paste your Linktree URL to auto-import links.</p>
+                    <h3 className="text-sm font-medium text-emerald-900">Import from Linktree</h3>
+                    <p className="text-xs text-emerald-600/80">Paste your Linktree URL to auto-import links.</p>
                   </div>
                   <div className="flex gap-2 w-1/3">
                     <Input 
                       placeholder="https://linktr.ee/..." 
                       value={importUrl}
                       onChange={e => setImportUrl(e.target.value)}
-                      className="h-9 bg-black/20 border-indigo-500/20 text-xs"
+                      className="h-9 bg-white border-emerald-200 text-xs focus:border-emerald-500"
                     />
                     <Button size="sm" variant="secondary" onClick={handleImport} disabled={importMutation.isPending}>
                       {importMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Import'}
@@ -388,8 +388,8 @@ export default function Admin() {
                     </Button>
                   </div>
                   {user.links.map((link, i) => (
-                    <div key={i} className="flex gap-4 items-start bg-white/5 p-4 rounded-xl border border-white/10 group hover:border-white/20 transition-colors">
-                      <div className="mt-3 text-white/20 cursor-grab active:cursor-grabbing">
+                    <div key={i} className="flex gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 group hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300">
+                      <div className="mt-3 text-muted-foreground cursor-grab active:cursor-grabbing">
                         <Settings className="w-4 h-4" />
                       </div>
                       <div className="flex-1 space-y-3">
@@ -401,7 +401,7 @@ export default function Admin() {
                             newLinks[i].title = e.target.value;
                             setUser({ ...user, links: newLinks });
                           }}
-                          className="bg-black/20 border-white/10"
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                         <Input 
                           placeholder="URL (https://...)" 
@@ -411,13 +411,13 @@ export default function Admin() {
                             newLinks[i].url = e.target.value;
                             setUser({ ...user, links: newLinks });
                           }}
-                          className="bg-black/20 border-white/10 text-xs font-mono text-white/60"
+                          className="bg-white/50 border-emerald-100 text-xs font-mono text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                       </div>
                       <Button 
                         size="icon" 
                         variant="ghost" 
-                        className="text-white/20 hover:text-red-400 hover:bg-red-900/20"
+                        className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
                         onClick={() => {
                           const newLinks = [...user.links];
                           newLinks.splice(i, 1);
@@ -429,7 +429,7 @@ export default function Admin() {
                     </div>
                   ))}
                   {user.links.length === 0 && (
-                    <div className="text-center py-12 text-white/20 border-2 border-dashed border-white/10 rounded-xl">
+                    <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
                       No links added yet
                     </div>
                   )}
@@ -446,19 +446,19 @@ export default function Admin() {
                   </Button>
                 </div>
                 {user.storeItems.map((item, i) => (
-                  <div key={i} className="flex gap-4 items-start bg-white/5 p-4 rounded-xl border border-white/10">
+                  <div key={i} className="flex gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300">
                     <div 
-                      className="w-24 h-24 rounded-lg bg-black/40 border border-white/10 overflow-hidden relative shrink-0 group cursor-pointer"
+                      className="w-24 h-24 rounded-lg bg-muted border border-border overflow-hidden relative shrink-0 group cursor-pointer"
                       onClick={() => document.getElementById(`store-image-${i}`)?.click()}
                     >
                       {item.image ? (
                         <img src={item.image} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/20">
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                           <ImageIcon className="w-8 h-8" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 bg-emerald-900/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <span className="text-xs font-medium text-white">Upload</span>
                       </div>
                     </div>
@@ -490,7 +490,7 @@ export default function Admin() {
                             newItems[i].title = e.target.value;
                             setUser({ ...user, storeItems: newItems });
                           }}
-                          className="bg-black/20 border-white/10"
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                         <Input 
                           placeholder="Price" 
@@ -500,7 +500,7 @@ export default function Admin() {
                             newItems[i].price = e.target.value;
                             setUser({ ...user, storeItems: newItems });
                           }}
-                          className="bg-black/20 border-white/10"
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                       </div>
                       <Input 
@@ -511,7 +511,7 @@ export default function Admin() {
                           newItems[i].image = e.target.value;
                           setUser({ ...user, storeItems: newItems });
                         }}
-                        className="bg-black/20 border-white/10 text-xs font-mono"
+                        className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                       />
                       <Input 
                         placeholder="Product Link" 
@@ -521,13 +521,13 @@ export default function Admin() {
                           newItems[i].url = e.target.value;
                           setUser({ ...user, storeItems: newItems });
                         }}
-                        className="bg-black/20 border-white/10 text-xs font-mono"
+                        className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                       />
                     </div>
                     <Button 
                       size="icon" 
                       variant="ghost" 
-                      className="text-white/20 hover:text-red-400 hover:bg-red-900/20"
+                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
                       onClick={() => {
                         const newItems = [...user.storeItems];
                         newItems.splice(i, 1);
@@ -543,7 +543,7 @@ export default function Admin() {
 
             {/* APPEARANCE TAB */}
             {activeTab === 'appearance' && (
-              <Card className="p-6 space-y-6 bg-white/5 border-white/10">
+              <Card className="p-6 space-y-6 bg-white/60 backdrop-blur-sm border-emerald-100 shadow-sm hover:shadow-emerald-500/5 transition-all">
                 <div className="space-y-4">
                   <h3 className="font-medium">Theme Color</h3>
                   <div className="grid grid-cols-3 gap-4">
@@ -564,7 +564,7 @@ export default function Admin() {
                             : 'opacity-60 hover:opacity-100 hover:scale-[1.02]'
                         }`}
                       >
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                        <div className="absolute inset-0 bg-emerald-900/10 group-hover:bg-transparent transition-colors" />
                         {user.themeColor === theme.name && (
                           <div className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center text-black shadow-lg">
                             <div className="w-2.5 h-2.5 bg-black rounded-full" />
@@ -583,35 +583,35 @@ export default function Admin() {
       </main>
 
       {/* 3. Live Preview Sidebar */}
-      <aside className="hidden xl:flex w-[450px] border-l border-white/10 bg-[#050505] items-center justify-center p-8 relative">
+      <aside className="hidden xl:flex w-[450px] border-l border-emerald-100 bg-emerald-50/30 items-center justify-center p-8 relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent pointer-events-none" />
         
         {/* Mobile Mockup */}
-        <div className="relative w-[320px] h-[650px] bg-black rounded-[3rem] border-8 border-zinc-800 shadow-2xl overflow-hidden ring-1 ring-white/10">
+        <div className="relative w-[320px] h-[650px] bg-background rounded-[3rem] border-8 border-slate-300 shadow-2xl overflow-hidden ring-1 ring-black/5">
           {/* Dynamic Notch */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-2xl z-20" />
           
           {/* Preview Content (Scaled Down Version of Public Profile) */}
-          <div className="w-full h-full overflow-y-auto scrollbar-hide bg-black text-white">
+          <div className="w-full h-full overflow-y-auto scrollbar-hide bg-background text-foreground">
             <div className={`min-h-full pb-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${themeColors.gradient}`}>
               <div className="p-6 pt-12 space-y-6">
                 
                 {/* Header */}
                 <div className="text-center space-y-3">
                   <div className={`w-24 h-24 mx-auto rounded-full p-1 bg-gradient-to-tr ${themeColors.ring}`}>
-                    <div className="w-full h-full rounded-full bg-black overflow-hidden relative">
+                    <div className="w-full h-full rounded-full bg-white overflow-hidden relative">
                       {user.image ? (
                         <img src={user.image} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-xl uppercase">
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-xl uppercase text-muted-foreground">
                           {user.username.charAt(0)}
                         </div>
                       )}
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">{user.title || 'Your Name'}</h2>
-                    <p className="text-xs text-white/60 mt-1 line-clamp-2">{user.bio || 'Your bio goes here...'}</p>
+                    <h2 className="text-xl font-bold text-foreground">{user.title || 'Your Name'}</h2>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{user.bio || 'Your bio goes here...'}</p>
                   </div>
                   <div className="flex justify-center gap-2">
                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><Mail className="w-3 h-3" /></div>
@@ -624,14 +624,14 @@ export default function Admin() {
                   {user.links.map((link, i) => (
                     <div 
                       key={i} 
-                      className={`group relative p-3 rounded-xl border border-white/5 bg-white/5 flex items-center gap-3 ${i === 0 ? `bg-gradient-to-br ${themeColors.accent}` : ''}`}
+                      className={`group relative p-3 rounded-xl border border-border bg-white flex items-center gap-3 ${i === 0 ? `bg-gradient-to-br ${themeColors.accent}` : ''}`}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${i === 0 ? 'bg-white/20' : 'bg-white/10'}`}>
-                        <Globe className="w-3 h-3" />
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${i === 0 ? 'bg-white/40' : 'bg-muted'}`}>
+                        <Globe className="w-3 h-3 text-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{link.title || 'Link Title'}</div>
-                        <div className="text-[10px] text-white/40 truncate">{link.url || 'https://...'}</div>
+                        <div className="text-sm font-medium truncate text-foreground">{link.title || 'Link Title'}</div>
+                        <div className="text-[10px] text-muted-foreground truncate">{link.url || 'https://...'}</div>
                       </div>
                     </div>
                   ))}
@@ -640,14 +640,14 @@ export default function Admin() {
                 {/* Store Preview */}
                 {user.storeItems.length > 0 && (
                   <div className="pt-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-white/40 mb-3">Shop</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Shop</h3>
                     <div className="grid grid-cols-2 gap-2">
                       {user.storeItems.map((item, i) => (
-                        <div key={i} className="aspect-square rounded-lg bg-white/5 border border-white/10 overflow-hidden relative">
+                        <div key={i} className="aspect-square rounded-lg bg-white border border-border overflow-hidden relative">
                           {item.image && <img src={item.image} alt="" className="w-full h-full object-cover" />}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
-                            <div className="text-[10px] font-medium truncate">{item.title}</div>
-                            <div className="text-[9px] text-white/60">{item.price}</div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-2">
+                            <div className="text-[10px] font-medium truncate text-white">{item.title}</div>
+                            <div className="text-[9px] text-white/80">{item.price}</div>
                           </div>
                         </div>
                       ))}
@@ -661,7 +661,7 @@ export default function Admin() {
         </div>
         
         <div className="absolute bottom-8 text-center">
-          <p className="text-xs text-white/20 uppercase tracking-widest font-medium">Live Preview</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Live Preview</p>
         </div>
       </aside>
 

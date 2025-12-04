@@ -1,18 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  /* Verdant Light Theme */
+  --background: #fcfdfc;
+  --foreground: #022c22; /* Emerald 950 */
   
-  /* Premium Glass Colors */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-highlight: rgba(255, 255, 255, 0.15);
+  /* Premium Glass Colors - Light Mode */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(16, 185, 129, 0.2);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
   
   /* Accents - Verdant Theme */
-  --primary: #ffffff;
-  --primary-foreground: #000000;
+  --primary: #10b981; /* Emerald 500 */
+  --primary-foreground: #ffffff;
+  --secondary: #ecfdf5; /* Emerald 50 */
+  --secondary-foreground: #047857; /* Emerald 700 */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  
+  /* Border colors */
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #10b981;
 }
 
 @layer base {
@@ -34,10 +44,10 @@
   }
   
   .glass-card {
-    background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+    background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 30px rgba(16, 185, 129, 0.05);
   }
 
   .text-gradient {
