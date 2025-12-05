@@ -26,17 +26,18 @@ export interface ISocialLinks {
   github?: string;
 }
 
-export interface IUser extends Document {
+export interface IUser {
+  _id?: mongoose.Types.ObjectId;
   username?: string;
   email: string;
-  title: string;
-  bio: string;
-  image: string;
-  links: ILink[];
-  storeItems: IStoreItem[];
+  title?: string;
+  bio?: string;
+  image?: string;
+  links?: ILink[];
+  storeItems?: IStoreItem[];
   socialLinks?: ISocialLinks;
-  themeColor: string;
-  createdAt: Date;
+  themeColor?: string;
+  createdAt?: Date;
 }
 
 const LinkSchema = new Schema<ILink>({

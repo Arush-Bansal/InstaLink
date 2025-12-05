@@ -9,13 +9,12 @@ import { ArrowRight, Sparkles, Zap, Loader2, TrendingUp, Palette, ShoppingBag, I
 
 import { toast } from "sonner";
 
-export default function Home() {
+import { Suspense } from "react";
+
+function HomeContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-
-
-
 
   const [view, setView] = useState<'login' | 'claim'>('claim');
   const [username, setUsername] = useState('');
@@ -408,5 +407,13 @@ export default function Home() {
       </footer>
 
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-600" /></div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

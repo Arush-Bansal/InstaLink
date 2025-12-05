@@ -24,7 +24,7 @@ export const authOptions: NextAuthOptions = {
               email,
               image: user.image,
               title: user.name || "New User",
-            });
+            } as any);
           }
           return true;
         } catch (error) {

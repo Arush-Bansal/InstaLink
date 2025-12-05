@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     // If storeItems were empty (because we created user with just email), we might want to populate them.
     // But $setOnInsert only works on insert.
     // Let's just check and update.
-    if (user && user.storeItems.length === 0) {
+    if (user && (!user.storeItems || user.storeItems.length === 0)) {
         user.storeItems = [
             { title: 'Minimalist Tee', price: '$35.00', image: '', url: '#' },
             { title: 'Abstract Print', price: '$120.00', image: '', url: '#' },
