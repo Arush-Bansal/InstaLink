@@ -40,6 +40,7 @@ export async function PUT(
       image: rest.image,
       links: rest.links,
       storeItems: rest.storeItems,
+      socialLinks: rest.socialLinks,
       themeColor: rest.themeColor
     };
 

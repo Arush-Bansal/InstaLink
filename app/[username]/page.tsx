@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Github, Instagram, Linkedin, Twitter, Globe, ShoppingBag, ExternalLink, Mail, ArrowUpRight, Search, Share2 } from "lucide-react";
+import { Github, Instagram, Linkedin, Twitter, Globe, ShoppingBag, ExternalLink, Mail, ArrowUpRight, Search, Share2, Youtube, Facebook } from "lucide-react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
@@ -31,6 +31,15 @@ interface UserData {
   image: string;
   links: LinkData[];
   storeItems?: StoreItem[];
+  socialLinks?: {
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    youtube?: string;
+    facebook?: string;
+    tiktok?: string;
+    github?: string;
+  };
   themeColor: string;
 }
 
@@ -197,6 +206,42 @@ export default function PublicProfile() {
                <Share2 className="w-4 h-4 mr-2" /> Share
              </Button>
           </div>
+
+          {/* Social Icons */}
+          {user.socialLinks && (
+            <div className="flex gap-4 justify-center pt-2">
+              {user.socialLinks.instagram && (
+                <a href={formatUrl(user.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-pink-600 transition-colors">
+                  <Instagram className="w-5 h-5" />
+                </a>
+              )}
+              {user.socialLinks.twitter && (
+                <a href={formatUrl(user.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors">
+                  <Twitter className="w-5 h-5" />
+                </a>
+              )}
+              {user.socialLinks.linkedin && (
+                <a href={formatUrl(user.socialLinks.linkedin)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-700 transition-colors">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+              )}
+              {user.socialLinks.youtube && (
+                <a href={formatUrl(user.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-red-600 transition-colors">
+                  <Youtube className="w-5 h-5" />
+                </a>
+              )}
+              {user.socialLinks.facebook && (
+                <a href={formatUrl(user.socialLinks.facebook)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-600 transition-colors">
+                  <Facebook className="w-5 h-5" />
+                </a>
+              )}
+              {user.socialLinks.github && (
+                <a href={formatUrl(user.socialLinks.github)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors">
+                  <Github className="w-5 h-5" />
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -289,21 +334,33 @@ export default function PublicProfile() {
                               className="relative aspect-square overflow-hidden bg-slate-50 block"
                               onClick={() => handleLinkClick(item._id, 'store')}
                             >
-                              <Image 
-                                src={item.image} 
-                                alt={item.title} 
-                                fill 
-                                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                              />
+                          {item.image ? (
+                            <Image 
+                              src={item.image} 
+                              alt={item.title} 
+                              fill 
+                              className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                              <ShoppingBag className="w-8 h-8" />
+                            </div>
+                          )}
                             </a>
                           ) : (
                             <div className="relative aspect-square overflow-hidden bg-slate-50">
-                              <Image 
-                                src={item.image} 
-                                alt={item.title} 
-                                fill 
-                                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                              />
+                          {item.image ? (
+                            <Image 
+                              src={item.image} 
+                              alt={item.title} 
+                              fill 
+                              className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                              <ShoppingBag className="w-8 h-8" />
+                            </div>
+                          )}
                             </div>
                           )}
                           <div className="p-4 flex-1 flex flex-col">

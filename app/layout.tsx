@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
+import SessionProvider from "@/components/SessionProvider";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -32,10 +33,12 @@ export default function RootLayout({
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-green-500/15 blur-[120px]" />
         </div>
         
-        <QueryProvider>
-          {children}
-          <Toaster position="top-center" theme="light" />
-        </QueryProvider>
+        <SessionProvider>
+          <QueryProvider>
+            {children}
+            <Toaster position="top-center" theme="light" />
+          </QueryProvider>
+        </SessionProvider>
       </body>
     </html>
   );

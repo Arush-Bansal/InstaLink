@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
@@ -23,7 +24,13 @@ import {
   ArrowUpRight,
   Globe,
   Mail,
-  BarChart2
+  BarChart2,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Youtube,
+  Facebook,
+  Github
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -72,6 +79,15 @@ interface UserData {
   image: string;
   links: Link[];
   storeItems: StoreItem[];
+  socialLinks?: {
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    youtube?: string;
+    facebook?: string;
+    tiktok?: string;
+    github?: string;
+  };
   themeColor: string;
 }
 
@@ -362,26 +378,67 @@ export default function Admin() {
   const [username, setUsername] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'shop' | 'appearance'>('profile');
   const [importUrl, setImportUrl] = useState("");
+  const { data: session, status } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
 
   // --- Effects & Queries ---
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('instaLinkUser');
-    if (!storedUser) {
-      router.push('/');
-      return;
-    }
-    const userData = JSON.parse(storedUser);
-    setUsername(userData.username);
-  }, [router]);
+    const handleClaim = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const claim = params.get('claim');
 
-  const { data: fetchedUser, isLoading } = useQuery({
+      if (status === "unauthenticated") {
+        router.push("/");
+      } else if (status === "authenticated") {
+        // @ts-ignore
+        const isNewUser = session?.user?.isNewUser || !session?.user?.username;
+        
+        if (claim) {
+          if (isNewUser) {
+             // Auto-onboard with claimed username
+             try {
+               const res = await fetch('/api/onboarding', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ username: claim })
+               });
+               if (res.ok) {
+                 // Force session update or reload to get new user data
+                 window.location.href = '/admin'; 
+               } else {
+                 toast.error("Failed to claim username");
+               }
+             } catch (e) {
+               toast.error("Error claiming username");
+             }
+          } else {
+            // Existing user trying to claim new link -> Error & Logout
+            await signOut({ redirect: false });
+            router.push(`/?error=already_connected&claim=${claim}`);
+          }
+        } else {
+          if (isNewUser) {
+            router.push("/onboarding");
+          } else {
+            // @ts-ignore
+            setUsername(session.user.username);
+          }
+        }
+      }
+    };
+
+    handleClaim();
+  }, [status, session, router]);
+
+  const { data: fetchedUser, isLoading: isUserLoading } = useQuery({
     queryKey: ['user', username],
     queryFn: () => fetchUser(username!),
     enabled: !!username,
   });
+
+  const isLoading = status === "loading" || isUserLoading;
 
   // Helper for ID generation
   const generateId = () => {
@@ -500,8 +557,7 @@ export default function Admin() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('instaLinkUser');
-    router.push('/');
+    signOut({ callbackUrl: "/" });
   };
 
   // --- Render Helpers ---
@@ -679,6 +735,78 @@ export default function Admin() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Bio</label>
                     <Input value={user.bio} onChange={e => setUser({...user, bio: e.target.value})} className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all" />
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-emerald-100">
+                    <h3 className="font-medium text-foreground">Social Links</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <Instagram className="w-3 h-3" /> Instagram
+                        </label>
+                        <Input 
+                          placeholder="https://instagram.com/..." 
+                          value={user.socialLinks?.instagram || ''} 
+                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, instagram: e.target.value }})}
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <Twitter className="w-3 h-3" /> Twitter / X
+                        </label>
+                        <Input 
+                          placeholder="https://twitter.com/..." 
+                          value={user.socialLinks?.twitter || ''} 
+                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, twitter: e.target.value }})}
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <Linkedin className="w-3 h-3" /> LinkedIn
+                        </label>
+                        <Input 
+                          placeholder="https://linkedin.com/in/..." 
+                          value={user.socialLinks?.linkedin || ''} 
+                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, linkedin: e.target.value }})}
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <Youtube className="w-3 h-3" /> YouTube
+                        </label>
+                        <Input 
+                          placeholder="https://youtube.com/..." 
+                          value={user.socialLinks?.youtube || ''} 
+                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, youtube: e.target.value }})}
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <Facebook className="w-3 h-3" /> Facebook
+                        </label>
+                        <Input 
+                          placeholder="https://facebook.com/..." 
+                          value={user.socialLinks?.facebook || ''} 
+                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, facebook: e.target.value }})}
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <Github className="w-3 h-3" /> GitHub
+                        </label>
+                        <Input 
+                          placeholder="https://github.com/..." 
+                          value={user.socialLinks?.github || ''} 
+                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, github: e.target.value }})}
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </Card>

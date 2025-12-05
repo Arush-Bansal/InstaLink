@@ -1,58 +1,81 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ArrowRight, Sparkles, Zap, Loader2, TrendingUp, Palette, ShoppingBag, Instagram, Globe, Layout } from "lucide-react";
 
+import { toast } from "sonner";
+
 export default function Home() {
-  const [username, setUsername] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState<any>(null);
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+
+
+
+  const [view, setView] = useState<'login' | 'claim'>('claim');
+  const [username, setUsername] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [claimError, setClaimError] = useState('');
 
   useEffect(() => {
-    // Check for existing session
-    const storedUser = localStorage.getItem('instaLinkUser');
-    if (storedUser) {
-      try {
-        setLoggedInUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Failed to parse user session");
-      }
+    // Check for error and claim params
+    const error = searchParams.get('error');
+    const claim = searchParams.get('claim');
+
+    if (error === 'already_connected' && claim) {
+      setView('claim');
+      setUsername(claim);
+      const msg = 'That account is already connected to another link. Please sign in with a different account.';
+      setClaimError(msg);
+      // Small delay to ensure toast shows up after navigation/render
+      setTimeout(() => toast.error(msg), 100);
+      
+      // Trigger availability check for the claimed name so they can try again
+      checkAvailability(claim);
     }
-  }, []);
+  }, [searchParams]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username) return;
-
-    setIsLoading(true);
-
+  const checkAvailability = async (name: string) => {
+    if (!name || name.length < 3) {
+      setIsAvailable(null);
+      return;
+    }
+    
+    setIsChecking(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/check-username', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username: name })
       });
-
       const data = await res.json();
-
-      if (data.success) {
-        // Store user in localStorage for MVP session
-        localStorage.setItem('instaLinkUser', JSON.stringify(data.user));
-        router.push("/admin");
+      if (data.error) {
+         setIsAvailable(false);
       } else {
-        alert(data.error || "Login failed");
+         setIsAvailable(data.available);
       }
-    } catch (error) {
-      console.error(error);
-      alert("An error occurred.");
+    } catch (err) {
+      setIsAvailable(false);
     } finally {
-      setIsLoading(false);
+      setIsChecking(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (view === 'claim' && username.length >= 3) {
+        checkAvailability(username);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [username, view]);
+
 
   return (
     <main className="flex min-h-screen flex-col relative overflow-hidden bg-emerald-50/30 text-slate-900">
@@ -80,10 +103,12 @@ export default function Home() {
             Turn your followers into customers with a bio page designed for the visual web. Higher clicks, better conversion, and editorial-grade aesthetics.
           </p>
 
-          {loggedInUser ? (
+          {status === "loading" ? (
+             <div className="flex justify-center mt-10"><Loader2 className="w-8 h-8 animate-spin text-emerald-600" /></div>
+          ) : session ? (
              <div className="flex flex-col items-center gap-4 mt-10">
                <div className="text-xl font-medium text-foreground/80">
-                 Welcome back, <span className="text-emerald-600">@{loggedInUser.username}</span>
+                 Welcome back, <span className="text-emerald-600">{session.user?.name}</span>
                </div>
                <Button 
                  size="lg" 
@@ -94,37 +119,98 @@ export default function Home() {
                  Go to Dashboard <ArrowRight className="w-5 h-5 ml-2" />
                </Button>
                <button 
-                 onClick={() => {
-                   localStorage.removeItem('instaLinkUser');
-                   setLoggedInUser(null);
-                 }}
+                 onClick={() => signOut()}
                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                >
                  LogOut
                </button>
              </div>
           ) : (
-            <form onSubmit={handleLogin} className="flex flex-col md:flex-row gap-4 max-w-lg mx-auto mt-12 w-full">
-              <div className="relative flex-grow">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-medium">instalink.com/</span>
-                <Input 
-                  placeholder="yourname" 
-                  className="h-14 pl-32 text-lg bg-white border-emerald-100 focus:border-emerald-500 transition-all rounded-xl text-foreground placeholder:text-muted-foreground/50 shadow-sm"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button 
-                size="lg" 
-                variant="gradient"
-                className="h-14 px-8 text-lg font-semibold shadow-lg shadow-emerald-500/20 rounded-xl whitespace-nowrap"
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Claim Link <ArrowRight className="w-5 h-5 ml-2" /></>}
-              </Button>
-            </form>
+            <div className="flex flex-col items-center gap-6 max-w-lg mx-auto mt-12 w-full min-h-[200px] justify-center transition-all duration-500">
+              
+              {/* LOGIN VIEW */}
+              {view === 'login' && (
+                <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                   <Button 
+                    size="lg" 
+                    variant="gradient"
+                    className="h-14 px-8 text-lg font-semibold shadow-lg shadow-emerald-500/20 rounded-xl w-full"
+                    onClick={() => signIn("google", { callbackUrl: "/admin" })}
+                  >
+                    <span className="mr-2">Sign in with Google</span> <ArrowRight className="w-5 h-5" />
+                  </Button>
+                  <button onClick={() => setView('claim')} className="text-sm text-muted-foreground hover:text-emerald-600 underline">
+                    Back to Claim
+                  </button>
+                </div>
+              )}
+
+              {/* CLAIM VIEW (Default) */}
+              {view === 'claim' && (
+                <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground font-medium">
+                      instalink.com/
+                    </div>
+                    <Input 
+                      autoFocus
+                      placeholder="yourname" 
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+                        setClaimError('');
+                      }}
+                      className={`h-14 pl-32 text-lg font-medium bg-white border-2 ${
+                        claimError ? 'border-red-300 focus:border-red-500' :
+                        isAvailable === true ? 'border-emerald-400 focus:border-emerald-500' : 
+                        isAvailable === false ? 'border-red-300 focus:border-red-500' :
+                        'border-emerald-100 focus:border-emerald-500'
+                      } rounded-xl shadow-sm transition-all`}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      {isChecking ? <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" /> :
+                       isAvailable === true ? <div className="flex items-center text-emerald-600 text-sm font-bold"><Sparkles className="w-4 h-4 mr-1" /> Available</div> :
+                       isAvailable === false ? <span className="text-red-500 text-sm font-bold">Taken</span> : null}
+                    </div>
+                  </div>
+
+                  {claimError && (
+                    <div className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg border border-red-100">
+                      {claimError}
+                    </div>
+                  )}
+                  
+                  {isAvailable === true && (
+                    <Button 
+                      size="lg" 
+                      variant="gradient"
+                      className="h-14 px-8 text-lg font-semibold shadow-lg shadow-emerald-500/20 rounded-xl w-full animate-in fade-in slide-in-from-top-2"
+                      onClick={() => signIn("google", { callbackUrl: `/admin?claim=${username}` })}
+                    >
+                      Claim & Signup <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  )}
+
+                  <div className="flex flex-col gap-3 pt-2">
+                    <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-emerald-100"></div>
+                        <span className="flex-shrink-0 mx-4 text-xs text-muted-foreground uppercase tracking-wider">Or</span>
+                        <div className="flex-grow border-t border-emerald-100"></div>
+                    </div>
+                    <Button 
+                        variant="outline"
+                        size="lg"
+                        onClick={() => setView('login')}
+                        className="h-12 w-full border-emerald-200 text-emerald-800 hover:bg-emerald-50 hover:text-emerald-900"
+                    >
+                        Login to Existing Account
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-sm text-muted-foreground">No credit card required.</p>
+            </div>
           )}
           
           <div className="pt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-muted-foreground/80 text-sm font-medium uppercase tracking-wider">

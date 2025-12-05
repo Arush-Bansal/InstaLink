@@ -16,13 +16,25 @@ export interface IStoreItem {
   _id?: string;
 }
 
+export interface ISocialLinks {
+  instagram?: string;
+  twitter?: string;
+  linkedin?: string;
+  youtube?: string;
+  facebook?: string;
+  tiktok?: string;
+  github?: string;
+}
+
 export interface IUser extends Document {
-  username: string;
+  username?: string;
+  email: string;
   title: string;
   bio: string;
   image: string;
   links: ILink[];
   storeItems: IStoreItem[];
+  socialLinks?: ISocialLinks;
   themeColor: string;
   createdAt: Date;
 }
@@ -42,12 +54,22 @@ const StoreItemSchema = new Schema<IStoreItem>({
 });
 
 const UserSchema = new Schema<IUser>({
-  username: { type: String, required: true, unique: true, index: true },
+  username: { type: String, required: false, unique: true, index: true, sparse: true }, // Username is optional initially (until onboarding)
+  email: { type: String, required: true, unique: true, index: true },
   title: { type: String, default: 'My Profile' },
   bio: { type: String, default: '' },
   image: { type: String, default: '' },
   links: { type: [LinkSchema], default: [] },
   storeItems: { type: [StoreItemSchema], default: [] },
+  socialLinks: {
+    instagram: { type: String, default: '' },
+    twitter: { type: String, default: '' },
+    linkedin: { type: String, default: '' },
+    youtube: { type: String, default: '' },
+    facebook: { type: String, default: '' },
+    tiktok: { type: String, default: '' },
+    github: { type: String, default: '' },
+  },
   themeColor: { type: String, default: 'indigo' },
   createdAt: { type: Date, default: Date.now },
 });

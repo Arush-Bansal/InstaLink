@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '*.linktr.ee',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
       }
     ],
   },
