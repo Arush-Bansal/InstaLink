@@ -38,6 +38,7 @@ export interface IUser {
   socialLinks?: ISocialLinks;
   themeColor?: string;
   createdAt?: Date;
+  password?: string;
 }
 
 const LinkSchema = new Schema<ILink>({
@@ -73,6 +74,7 @@ const UserSchema = new Schema<IUser>({
   },
   themeColor: { type: String, default: 'indigo' },
   createdAt: { type: Date, default: Date.now },
+  password: { type: String, select: false },
 });
 
 // Prevent model overwrite in development

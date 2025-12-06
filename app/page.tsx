@@ -21,6 +21,10 @@ function HomeContent() {
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [claimError, setClaimError] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isEmailSignup, setIsEmailSignup] = useState(false);
 
   useEffect(() => {
     // Check for error and claim params
@@ -37,8 +41,38 @@ function HomeContent() {
       
       // Trigger availability check for the claimed name so they can try again
       checkAvailability(claim);
+    } else if (error === 'AccountExistsWithPassword') {
+       setView('login');
+       setAuthError('Account exists with password. Please sign in with your email and password.');
     }
   }, [searchParams]);
+
+  const handleCredentialsLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    
+    const isSignup = view === 'claim';
+    
+    const res = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+      username: isSignup ? username : undefined,
+      callbackUrl: '/admin'
+    });
+
+    if (res?.error) {
+       if (res.error.includes("Account exists with Google")) {
+           setAuthError("This email is linked to a Google account. Please sign in with Google.");
+       } else if (res.error.includes("Invalid password")) {
+           setAuthError("Invalid password.");
+       } else {
+           setAuthError(res.error);
+       }
+    } else {
+      router.push('/admin');
+    }
+  };
 
   const checkAvailability = async (name: string) => {
     if (!name || name.length < 3) {
@@ -138,6 +172,34 @@ function HomeContent() {
                   >
                     <span className="mr-2">Sign in with Google</span> <ArrowRight className="w-5 h-5" />
                   </Button>
+                  
+                  <div className="relative flex items-center py-2">
+                      <div className="flex-grow border-t border-emerald-100"></div>
+                      <span className="flex-shrink-0 mx-4 text-xs text-muted-foreground uppercase tracking-wider">Or with Email</span>
+                      <div className="flex-grow border-t border-emerald-100"></div>
+                  </div>
+
+                  <form onSubmit={handleCredentialsLogin} className="space-y-3">
+                      <Input 
+                          type="email" 
+                          placeholder="Email" 
+                          value={email} 
+                          onChange={e => setEmail(e.target.value)} 
+                          required 
+                          className="h-12 bg-white/80"
+                      />
+                      <Input 
+                          type="password" 
+                          placeholder="Password" 
+                          value={password} 
+                          onChange={e => setPassword(e.target.value)} 
+                          required 
+                          className="h-12 bg-white/80"
+                      />
+                      {authError && <p className="text-red-500 text-sm font-medium">{authError}</p>}
+                      <Button type="submit" className="w-full h-12 font-semibold" variant="outline">Sign In</Button>
+                  </form>
+
                   <button onClick={() => setView('claim')} className="text-sm text-muted-foreground hover:text-emerald-600 underline">
                     Back to Claim
                   </button>
@@ -180,14 +242,48 @@ function HomeContent() {
                   )}
                   
                   {isAvailable === true && (
-                    <Button 
-                      size="lg" 
-                      variant="gradient"
-                      className="h-14 px-8 text-lg font-semibold shadow-lg shadow-emerald-500/20 rounded-xl w-full animate-in fade-in slide-in-from-top-2"
-                      onClick={() => signIn("google", { callbackUrl: `/admin?claim=${username}` })}
-                    >
-                      Claim & Signup <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
+                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                        <Button 
+                          size="lg" 
+                          variant="gradient"
+                          className="h-14 px-8 text-lg font-semibold shadow-lg shadow-emerald-500/20 rounded-xl w-full"
+                          onClick={() => signIn("google", { callbackUrl: `/admin?claim=${username}` })}
+                        >
+                          Claim with Google <ArrowRight className="w-5 h-5 ml-2" />
+                        </Button>
+                        
+                        {!isEmailSignup ? (
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setIsEmailSignup(true)} 
+                                className="w-full h-12 border-emerald-200 text-emerald-800 hover:bg-emerald-50"
+                            >
+                                Claim with Email
+                            </Button>
+                        ) : (
+                            <form onSubmit={handleCredentialsLogin} className="space-y-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-emerald-100 shadow-sm">
+                                <h3 className="text-sm font-semibold text-emerald-900 mb-1">Create Account for @{username}</h3>
+                                <Input 
+                                    type="email" 
+                                    placeholder="Email" 
+                                    value={email} 
+                                    onChange={e => setEmail(e.target.value)} 
+                                    required 
+                                    className="bg-white"
+                                />
+                                <Input 
+                                    type="password" 
+                                    placeholder="Password" 
+                                    value={password} 
+                                    onChange={e => setPassword(e.target.value)} 
+                                    required 
+                                    className="bg-white"
+                                />
+                                {authError && <p className="text-red-500 text-sm font-medium">{authError}</p>}
+                                <Button type="submit" className="w-full" variant="gradient">Create Account</Button>
+                            </form>
+                        )}
+                    </div>
                   )}
 
                   <div className="flex flex-col gap-3 pt-2">
