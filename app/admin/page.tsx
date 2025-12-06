@@ -30,10 +30,12 @@ import {
   Linkedin,
   Youtube,
   Facebook,
-  Github
+  Github,
+  Search
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import ProfilePreview from "@/components/ProfilePreview";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext, 
@@ -128,6 +130,8 @@ const getThemeColors = (theme: string) => {
   };
   return themes[theme] || themes.verdant;
 };
+
+
 
 // --- API Functions ---
 
@@ -567,6 +571,7 @@ export default function Admin() {
 
   const themeColors = getThemeColors(user.themeColor || 'verdant');
 
+
   return (
     <div className="flex h-screen bg-emerald-50/30 text-slate-900 overflow-hidden font-sans">
       
@@ -952,6 +957,9 @@ export default function Admin() {
         </div>
       </main>
 
+
+
+
       {/* 3. Live Preview Sidebar */}
       <aside className="hidden xl:flex w-[450px] border-l border-emerald-100 bg-emerald-50/30 items-center justify-center p-8 relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent pointer-events-none" />
@@ -961,72 +969,9 @@ export default function Admin() {
           {/* Dynamic Notch */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-2xl z-20" />
           
-          {/* Preview Content (Scaled Down Version of Public Profile) */}
-          <div className="w-full h-full overflow-y-auto scrollbar-hide bg-background text-foreground">
-            <div className={`min-h-full pb-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${themeColors.gradient}`}>
-              <div className="p-6 pt-12 space-y-6">
-                
-                {/* Header */}
-                <div className="text-center space-y-3">
-                  <div className={`w-24 h-24 mx-auto rounded-full p-1 bg-gradient-to-tr ${themeColors.ring}`}>
-                    <div className="w-full h-full rounded-full bg-white overflow-hidden relative">
-                      {user.image ? (
-                        <img src={user.image} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-muted flex items-center justify-center text-xl uppercase text-muted-foreground">
-                          {user.username.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground">{user.title || 'Your Name'}</h2>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{user.bio || 'Your bio goes here...'}</p>
-                  </div>
-                  <div className="flex justify-center gap-2">
-                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><Mail className="w-3 h-3" /></div>
-                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><Globe className="w-3 h-3" /></div>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="space-y-3">
-                  {user.links.map((link, i) => (
-                    <div 
-                      key={i} 
-                      className={`group relative p-3 rounded-xl border border-border bg-white flex items-center gap-3 ${i === 0 ? `bg-gradient-to-br ${themeColors.accent}` : ''}`}
-                    >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${i === 0 ? 'bg-white/40' : 'bg-muted'}`}>
-                        <Globe className="w-3 h-3 text-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate text-foreground">{link.title || 'Link Title'}</div>
-                        <div className="text-[10px] text-muted-foreground truncate">{link.url || 'https://...'}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Store Preview */}
-                {user.storeItems.length > 0 && (
-                  <div className="pt-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Shop</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {user.storeItems.map((item, i) => (
-                        <div key={i} className="aspect-square rounded-lg bg-white border border-border overflow-hidden relative">
-                          {item.image && <img src={item.image} alt="" className="w-full h-full object-cover" />}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-2">
-                            <div className="text-[10px] font-medium truncate text-white">{item.title}</div>
-                            <div className="text-[9px] text-white/80">{item.price}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            </div>
+          {/* Preview Content */}
+          <div className="w-full h-full overflow-y-auto scrollbar-hide bg-background text-foreground relative">
+             <ProfilePreview user={user} isPreview={true} />
           </div>
         </div>
         
