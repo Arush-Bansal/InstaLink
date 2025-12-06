@@ -6,6 +6,29 @@ import User from "@/models/User";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
+
+const DEFAULT_PROFILE_IMAGE = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop";
+
+const DEFAULT_USER_DATA = {
+  bio: "Fashion & Lifestyle Creator 🇮🇳 | Sharing my style journey",
+  links: [
+    { title: "My Myntra Finds", url: "https://www.myntra.com" },
+    { title: "Amazon Favorites", url: "https://www.amazon.in" },
+    { title: "Latest YouTube Vlog", url: "https://youtube.com" }
+  ],
+  storeItems: [
+    { title: "Floral Summer Dress", price: "₹1,499", image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop", url: "#" },
+    { title: "Designer Handbag", price: "₹2,999", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop", url: "#" },
+    { title: "Chic Sunglasses", price: "₹999", image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop", url: "#" }
+  ],
+  socialLinks: {
+    instagram: "https://instagram.com",
+    pinterest: "https://pinterest.com",
+    youtube: "https://youtube.com"
+  },
+  themeColor: "rose"
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -41,12 +64,17 @@ export const authOptions: NextAuthOptions = {
             image: user.image,
           };
         } else {
+          if (!credentials.username || credentials.username === "undefined") {
+            throw new Error("Account does not exist. Please sign up.");
+          }
           const hashedPassword = await bcrypt.hash(credentials.password, 10);
           const newUser = await User.create({
             email: credentials.email,
             password: hashedPassword,
-            username: credentials.username || undefined,
-            title: credentials.username || "New User",
+            username: credentials.username,
+            title: credentials.username,
+            image: DEFAULT_PROFILE_IMAGE,
+            ...DEFAULT_USER_DATA,
           });
           return {
             id: newUser._id.toString(),
@@ -74,8 +102,9 @@ export const authOptions: NextAuthOptions = {
           } else {
             await User.create({
               email,
-              image: user.image,
+              image: user.image || DEFAULT_PROFILE_IMAGE,
               title: user.name || "New User",
+              ...DEFAULT_USER_DATA,
             } as any);
           }
           return true;

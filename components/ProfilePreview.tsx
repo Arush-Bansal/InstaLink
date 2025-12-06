@@ -3,17 +3,18 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Github, Instagram, Linkedin, Twitter, Globe, ShoppingBag, Mail, ArrowUpRight, Search, Share2, Youtube, Facebook } from "lucide-react";
+import { Instagram, Twitter, Globe, ShoppingBag, Mail, ArrowUpRight, Search, Share2, Youtube, Facebook, Pin } from "lucide-react";
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import Fuse from "fuse.js";
+import { toast } from "sonner";
 
 // Shared Interfaces
 export interface LinkData {
   title: string;
   url: string;
   _id?: string;
-  id?: string; // For admin compatibility
+  id?: string; // For dashboard compatibility
 }
 
 export interface StoreItem {
@@ -22,7 +23,7 @@ export interface StoreItem {
   price: string;
   url?: string;
   _id?: string;
-  id?: string; // For admin compatibility
+  id?: string; // For dashboard compatibility
 }
 
 export interface UserData {
@@ -38,8 +39,8 @@ export interface UserData {
     linkedin?: string;
     youtube?: string;
     facebook?: string;
-    tiktok?: string;
-    github?: string;
+    pinterest?: string;
+    email?: string;
   };
   themeColor: string;
 }
@@ -52,48 +53,60 @@ interface ProfilePreviewProps {
 
 // Helper function to get theme colors
 const getThemeColors = (theme: string) => {
-  const themes: Record<string, { gradient: string; accent: string; ring: string; text: string; bg: string }> = {
+  const themes: Record<string, { gradient: string; accent: string; ring: string; text: string; bg: string; pageBg: string; hoverShadow: string }> = {
     verdant: { 
-      gradient: 'from-emerald-50 via-background to-background', 
+      gradient: 'from-emerald-200/80 via-emerald-100/50 to-transparent', 
       accent: 'bg-emerald-500',
       ring: 'ring-emerald-100',
       text: 'text-emerald-900',
-      bg: 'bg-emerald-50/50'
+      bg: 'bg-emerald-50/50',
+      pageBg: 'bg-emerald-50',
+      hoverShadow: 'hover:shadow-emerald-500/20'
     },
     indigo: { 
-      gradient: 'from-indigo-50 via-background to-background', 
+      gradient: 'from-indigo-200/80 via-indigo-100/50 to-transparent', 
       accent: 'bg-indigo-500',
       ring: 'ring-indigo-100',
       text: 'text-indigo-900',
-      bg: 'bg-indigo-50/50'
+      bg: 'bg-indigo-50/50',
+      pageBg: 'bg-indigo-50',
+      hoverShadow: 'hover:shadow-indigo-500/20'
     },
     purple: { 
-      gradient: 'from-purple-50 via-background to-background', 
+      gradient: 'from-purple-200/80 via-purple-100/50 to-transparent', 
       accent: 'bg-purple-500',
       ring: 'ring-purple-100',
       text: 'text-purple-900',
-      bg: 'bg-purple-50/50'
+      bg: 'bg-purple-50/50',
+      pageBg: 'bg-purple-50',
+      hoverShadow: 'hover:shadow-purple-500/20'
     },
     rose: { 
-      gradient: 'from-rose-50 via-background to-background', 
+      gradient: 'from-rose-200/80 via-rose-100/50 to-transparent', 
       accent: 'bg-rose-500',
       ring: 'ring-rose-100',
       text: 'text-rose-900',
-      bg: 'bg-rose-50/50'
+      bg: 'bg-rose-50/50',
+      pageBg: 'bg-rose-50',
+      hoverShadow: 'hover:shadow-rose-500/20'
     },
     amber: { 
-      gradient: 'from-amber-50 via-background to-background', 
+      gradient: 'from-amber-200/80 via-amber-100/50 to-transparent', 
       accent: 'bg-amber-500',
       ring: 'ring-amber-100',
       text: 'text-amber-900',
-      bg: 'bg-amber-50/50'
+      bg: 'bg-amber-50/50',
+      pageBg: 'bg-amber-50',
+      hoverShadow: 'hover:shadow-amber-500/20'
     },
     cyan: { 
-      gradient: 'from-cyan-50 via-background to-background', 
+      gradient: 'from-cyan-200/80 via-cyan-100/50 to-transparent', 
       accent: 'bg-cyan-500',
       ring: 'ring-cyan-100',
       text: 'text-cyan-900',
-      bg: 'bg-cyan-50/50'
+      bg: 'bg-cyan-50/50',
+      pageBg: 'bg-cyan-50',
+      hoverShadow: 'hover:shadow-cyan-500/20'
     },
   };
   return themes[theme] || themes.verdant;
@@ -129,16 +142,21 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
     }
   };
 
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Copied to clipboard");
+  };
+
   return (
-    <div className={`min-h-screen pb-20 bg-background text-foreground overflow-x-hidden relative ${isPreview ? 'rounded-[2.5rem] overflow-hidden' : ''}`}>
+    <div className={`min-h-screen pb-20 ${themeColors.pageBg} text-foreground overflow-x-hidden relative z-0 ${isPreview ? 'rounded-[2.5rem] overflow-hidden' : ''}`}>
       {/* Dynamic Background */}
-      <div className={`absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${themeColors.gradient} opacity-60`} />
+      <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${themeColors.gradient}`} />
       
       {/* Decorative Blur Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-br from-white/40 to-transparent blur-3xl opacity-50 -z-10" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-tl from-white/40 to-transparent blur-3xl opacity-50 -z-10" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-br from-white/40 to-transparent blur-3xl opacity-50" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-tl from-white/40 to-transparent blur-3xl opacity-50" />
 
-      <div className={`max-w-2xl mx-auto px-4 ${isPreview ? 'pt-8' : 'pt-12 md:pt-20'} space-y-10`}>
+      <div className={`relative z-10 max-w-2xl mx-auto px-4 ${isPreview ? 'pt-8' : 'pt-12 md:pt-20'} space-y-10`}>
         
         {/* Header Section */}
         <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -162,50 +180,46 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
             <p className="text-lg text-slate-600 font-light leading-relaxed">{user.bio}</p>
           </div>
           
-          <div className="flex flex-wrap gap-3 justify-center">
-             <Button size="sm" variant="outline" className="rounded-full px-6 border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-               <Mail className="w-4 h-4 mr-2" /> Contact
-             </Button>
-             <Button size="sm" variant="outline" className="rounded-full px-6 border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-               <Share2 className="w-4 h-4 mr-2" /> Share
-             </Button>
-          </div>
+          <div className="flex gap-3 justify-center pt-2 flex-wrap">
+            {user.socialLinks?.instagram && (
+              <a href={formatUrl(user.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm ring-1 ring-slate-900/5 hover:ring-slate-900/10 hover:scale-110 transition-all duration-300 text-slate-400 hover:text-pink-600">
+                <Instagram className="w-5 h-5" />
+              </a>
+            )}
+            {user.socialLinks?.twitter && (
+              <a href={formatUrl(user.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm ring-1 ring-slate-900/5 hover:ring-slate-900/10 hover:scale-110 transition-all duration-300 text-slate-400 hover:text-blue-400">
+                <Twitter className="w-5 h-5" />
+              </a>
+            )}
+            {user.socialLinks?.youtube && (
+              <a href={formatUrl(user.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm ring-1 ring-slate-900/5 hover:ring-slate-900/10 hover:scale-110 transition-all duration-300 text-slate-400 hover:text-red-600">
+                <Youtube className="w-5 h-5" />
+              </a>
+            )}
+            {user.socialLinks?.facebook && (
+              <a href={formatUrl(user.socialLinks.facebook)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm ring-1 ring-slate-900/5 hover:ring-slate-900/10 hover:scale-110 transition-all duration-300 text-slate-400 hover:text-blue-600">
+                <Facebook className="w-5 h-5" />
+              </a>
+            )}
 
-          {/* Social Icons */}
-          {user.socialLinks && (
-            <div className="flex gap-4 justify-center pt-2">
-              {user.socialLinks.instagram && (
-                <a href={formatUrl(user.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-pink-600 transition-colors">
-                  <Instagram className="w-5 h-5" />
-                </a>
-              )}
-              {user.socialLinks.twitter && (
-                <a href={formatUrl(user.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors">
-                  <Twitter className="w-5 h-5" />
-                </a>
-              )}
-              {user.socialLinks.linkedin && (
-                <a href={formatUrl(user.socialLinks.linkedin)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-700 transition-colors">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-              )}
-              {user.socialLinks.youtube && (
-                <a href={formatUrl(user.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-red-600 transition-colors">
-                  <Youtube className="w-5 h-5" />
-                </a>
-              )}
-              {user.socialLinks.facebook && (
-                <a href={formatUrl(user.socialLinks.facebook)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-600 transition-colors">
-                  <Facebook className="w-5 h-5" />
-                </a>
-              )}
-              {user.socialLinks.github && (
-                <a href={formatUrl(user.socialLinks.github)} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors">
-                  <Github className="w-5 h-5" />
-                </a>
-              )}
-            </div>
-          )}
+            {user.socialLinks?.pinterest && (
+              <a href={formatUrl(user.socialLinks.pinterest)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm ring-1 ring-slate-900/5 hover:ring-slate-900/10 hover:scale-110 transition-all duration-300 text-slate-400 hover:text-red-600">
+                <Pin className="w-5 h-5" />
+              </a>
+            )}
+            {user.socialLinks?.email && (
+              <a href={`mailto:${user.socialLinks.email}`} className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm ring-1 ring-slate-900/5 hover:ring-slate-900/10 hover:scale-110 transition-all duration-300 text-slate-400 hover:text-slate-900">
+                <Mail className="w-5 h-5" />
+              </a>
+            )}
+            <button 
+              onClick={handleShare}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm ring-1 ring-slate-900/5 hover:ring-slate-900/10 hover:scale-110 transition-all duration-300 text-slate-400 hover:text-slate-900"
+              title="Share"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
@@ -254,18 +268,18 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
                     handleItemClick(link._id || link.id, 'link');
                   }}
                 >
-                  <Card className={`relative overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${i === 0 ? 'bg-slate-900 text-white' : 'bg-white hover:bg-slate-50'}`}>
+                  <Card className={`relative overflow-hidden border-0 shadow-sm ${themeColors.hoverShadow} transition-all duration-300 transform hover:-translate-y-1 bg-white hover:bg-slate-50`}>
                     <div className="p-5 flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${i === 0 ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-white group-hover:shadow-sm'}`}>
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center transition-colors bg-slate-100 text-slate-600 group-hover:bg-white group-hover:shadow-sm">
                            <Globe className="w-5 h-5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className={`font-semibold text-base truncate ${i === 0 ? 'text-white' : 'text-slate-900'}`}>{link.title}</h3>
-                          <p className={`text-xs truncate opacity-70 ${i === 0 ? 'text-white/80' : 'text-slate-500'}`}>{link.url.replace(/^https?:\/\//, '')}</p>
+                          <h3 className="font-semibold text-base truncate text-slate-900">{link.title}</h3>
+                          <p className="text-xs truncate opacity-70 text-slate-500">{link.url.replace(/^https?:\/\//, '')}</p>
                         </div>
                       </div>
-                      <div className={`opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 ${i === 0 ? 'text-white' : 'text-slate-400'}`}>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 text-slate-400">
                         <ArrowUpRight className="w-5 h-5" />
                       </div>
                     </div>
@@ -292,7 +306,7 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
 
                   <div className="grid grid-cols-2 gap-4">
                     {filteredStoreItems.map((item, i) => (
-                      <div key={i} className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
+                      <div key={i} className={`group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm ${themeColors.hoverShadow} transition-all duration-300`}>
                           {item.url ? (
                             <a 
                               href={isPreview ? '#' : formatUrl(item.url)}
@@ -370,7 +384,7 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
               ) : (
                 <div className="text-center text-slate-400 py-20 bg-white/50 rounded-3xl border border-dashed border-slate-200">
                   <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                  <p>No store items available yet</p>
+                  <p>No shop items available yet</p>
                 </div>
               )}
             </div>

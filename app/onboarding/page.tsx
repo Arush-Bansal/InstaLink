@@ -25,7 +25,7 @@ export default function Onboarding() {
 
   // @ts-ignore
   if (session?.user?.username) {
-    router.push("/admin");
+    router.push("/dashboard");
     return null;
   }
 
@@ -48,7 +48,7 @@ export default function Onboarding() {
       if (data.success) {
         // Force session update or redirect
         // Ideally we should reload the session, but a hard reload of the page works too
-        window.location.href = "/admin";
+        window.location.href = "/dashboard";
       } else {
         setError(data.error || "Failed to claim username");
       }

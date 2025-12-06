@@ -65,9 +65,9 @@ export async function POST(request: Request) {
     // Let's just check and update.
     if (user && (!user.storeItems || user.storeItems.length === 0)) {
         user.storeItems = [
-            { title: 'Minimalist Tee', price: '$35.00', image: '', url: '#' },
-            { title: 'Abstract Print', price: '$120.00', image: '', url: '#' },
-            { title: 'Digital Asset Pack', price: '$49.00', image: '', url: '#' }
+            { title: "Floral Summer Dress", price: "₹1,499", image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop", url: "#" },
+            { title: "Designer Handbag", price: "₹2,999", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop", url: "#" },
+            { title: "Chic Sunglasses", price: "₹999", image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop", url: "#" }
         ];
         await user.save();
     }

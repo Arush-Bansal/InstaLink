@@ -58,7 +58,7 @@ function HomeContent() {
       email,
       password,
       username: isSignup ? username : undefined,
-      callbackUrl: '/admin'
+      callbackUrl: '/dashboard'
     });
 
     if (res?.error) {
@@ -66,11 +66,17 @@ function HomeContent() {
            setAuthError("This email is linked to a Google account. Please sign in with Google.");
        } else if (res.error.includes("Invalid password")) {
            setAuthError("Invalid password.");
+       } else if (res.error.includes("Account does not exist")) {
+           setAuthError("Account does not exist. Please sign up.");
        } else {
-           setAuthError(res.error);
+           if (res.error.includes("E11000") || res.error.includes("duplicate key")) {
+             setAuthError("An account with this email or username already exists.");
+           } else {
+             setAuthError("Authentication failed. Please try again.");
+           }
        }
     } else {
-      router.push('/admin');
+      router.push('/dashboard');
     }
   };
 
@@ -147,7 +153,7 @@ function HomeContent() {
                  size="lg" 
                  variant="gradient"
                  className="h-14 px-8 text-lg font-semibold shadow-lg shadow-emerald-500/20 rounded-full"
-                 onClick={() => router.push('/admin')}
+                 onClick={() => router.push('/dashboard')}
                >
                  Go to Dashboard <ArrowRight className="w-5 h-5 ml-2" />
                </Button>
@@ -168,7 +174,7 @@ function HomeContent() {
                     size="lg" 
                     variant="gradient"
                     className="h-14 px-8 text-lg font-semibold shadow-lg shadow-emerald-500/20 rounded-xl w-full"
-                    onClick={() => signIn("google", { callbackUrl: "/admin" })}
+                    onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                   >
                     <span className="mr-2">Sign in with Google</span> <ArrowRight className="w-5 h-5" />
                   </Button>
@@ -247,7 +253,7 @@ function HomeContent() {
                           size="lg" 
                           variant="gradient"
                           className="h-14 px-8 text-lg font-semibold shadow-lg shadow-emerald-500/20 rounded-xl w-full"
-                          onClick={() => signIn("google", { callbackUrl: `/admin?claim=${username}` })}
+                          onClick={() => signIn("google", { callbackUrl: `/dashboard?claim=${username}` })}
                         >
                           Claim with Google <ArrowRight className="w-5 h-5 ml-2" />
                         </Button>

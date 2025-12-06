@@ -22,8 +22,9 @@ export interface ISocialLinks {
   linkedin?: string;
   youtube?: string;
   facebook?: string;
-  tiktok?: string;
+  pinterest?: string;
   github?: string;
+  email?: string;
 }
 
 export interface IUser {
@@ -69,8 +70,9 @@ const UserSchema = new Schema<IUser>({
     linkedin: { type: String, default: '' },
     youtube: { type: String, default: '' },
     facebook: { type: String, default: '' },
-    tiktok: { type: String, default: '' },
+    pinterest: { type: String, default: '' },
     github: { type: String, default: '' },
+    email: { type: String, default: '' },
   },
   themeColor: { type: String, default: 'indigo' },
   createdAt: { type: Date, default: Date.now },

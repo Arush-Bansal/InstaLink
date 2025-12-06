@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { 
   LayoutDashboard, 
   Link as LinkIcon, 
@@ -23,14 +24,13 @@ import {
   Smartphone,
   ArrowUpRight,
   Globe,
-  Mail,
-  BarChart2,
   Instagram,
   Twitter,
-  Linkedin,
   Youtube,
   Facebook,
-  Github,
+  Mail,
+  Pin, // For Pinterest
+  BarChart2,
   Search
 } from "lucide-react";
 import { toast } from "sonner";
@@ -84,11 +84,10 @@ interface UserData {
   socialLinks?: {
     instagram?: string;
     twitter?: string;
-    linkedin?: string;
     youtube?: string;
     facebook?: string;
-    tiktok?: string;
-    github?: string;
+    pinterest?: string;
+    email?: string;
   };
   themeColor: string;
 }
@@ -289,7 +288,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
             <ImageIcon className="w-8 h-8" />
           </div>
         )}
-        <div className="absolute inset-0 bg-emerald-900/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <div className={`absolute inset-0 bg-emerald-900/20 flex items-center justify-center transition-opacity pointer-events-none ${item.image ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
           <span className="text-xs font-medium text-white">Upload (Click) <br/> Move (Hold)</span>
         </div>
         <div className="absolute top-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm">
@@ -338,16 +337,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
             className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
           />
         </div>
-        <Input 
-          placeholder="Or paste Image URL..." 
-          value={item.image} 
-          onChange={e => {
-            const newItems = [...user.storeItems];
-            newItems[index].image = e.target.value;
-            setUser({ ...user, storeItems: newItems });
-          }}
-          className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
-        />
+
         <Input 
           placeholder="Product Link" 
           value={item.url || ''} 
@@ -377,7 +367,36 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
 
 // --- Main Component ---
 
-export default function Admin() {
+const normalizeSocialUrl = (platform: string, value: string) => {
+  if (!value) return value;
+  
+  // If it's already a URL, leave it alone
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value;
+  }
+
+  const baseUrls: Record<string, string> = {
+    instagram: 'https://instagram.com/',
+    twitter: 'https://twitter.com/',
+    youtube: 'https://youtube.com/',
+    facebook: 'https://facebook.com/',
+    pinterest: 'https://pinterest.com/',
+  };
+
+  const baseUrl = baseUrls[platform];
+  if (!baseUrl) return value;
+
+  // If it looks like a domain, just prepend https://
+  if (value.startsWith('www.') || value.includes('.com') || value.includes('.net') || value.includes('.org') || value.includes('.co')) {
+     return `https://${value}`;
+  }
+
+  // Otherwise treat as username
+  const cleanValue = value.startsWith('@') ? value.slice(1) : value;
+  return `${baseUrl}${cleanValue}`;
+};
+
+export default function Dashboard() {
   const [user, setUser] = useState<UserData | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'shop' | 'appearance'>('profile');
@@ -410,7 +429,7 @@ export default function Admin() {
                });
                if (res.ok) {
                  // Force session update or reload to get new user data
-                 window.location.href = '/admin'; 
+                 window.location.href = '/dashboard'; 
                } else {
                  toast.error("Failed to claim username");
                }
@@ -577,7 +596,10 @@ export default function Admin() {
       
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-emerald-100 z-30 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2 font-bold text-lg text-foreground">
+        <div 
+          className="flex items-center gap-2 font-bold text-lg text-foreground cursor-pointer"
+          onClick={() => window.location.reload()}
+        >
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
             <Share2 className="w-5 h-5" />
           </div>
@@ -598,7 +620,7 @@ export default function Admin() {
         {[
           { id: 'profile', label: 'Profile', icon: LayoutDashboard },
           { id: 'links', label: 'Links', icon: LinkIcon },
-          { id: 'shop', label: 'Store', icon: ShoppingBag },
+          { id: 'shop', label: 'Shop', icon: ShoppingBag },
           { id: 'appearance', label: 'Theme', icon: Palette },
         ].map((item) => (
           <button
@@ -619,7 +641,10 @@ export default function Admin() {
       {/* 1. Sidebar Navigation */}
       <aside className="hidden md:flex w-64 border-r border-emerald-100 flex-col bg-white/80 backdrop-blur-xl z-20">
         <div className="p-6 border-b border-emerald-100">
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-foreground">
+          <div 
+            className="flex items-center gap-2 font-bold text-xl tracking-tight text-foreground cursor-pointer"
+            onClick={() => window.location.reload()}
+          >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
               <Share2 className="w-5 h-5" />
             </div>
@@ -631,7 +656,7 @@ export default function Admin() {
           {[
             { id: 'profile', label: 'Profile', icon: LayoutDashboard },
             { id: 'links', label: 'Links', icon: LinkIcon },
-            { id: 'shop', label: 'Store', icon: ShoppingBag },
+            { id: 'shop', label: 'Shop', icon: ShoppingBag },
             { id: 'appearance', label: 'Appearance', icon: Palette },
           ].map((item) => (
             <button
@@ -659,7 +684,7 @@ export default function Admin() {
           </Button>
           <Button 
             variant="ghost" 
-            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+            className="w-full justify-start text-red-500 border border-red-500 hover:text-red-600 hover:bg-red-50"
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4 mr-2" /> Logout
@@ -677,9 +702,11 @@ export default function Admin() {
               <h1 className="text-3xl font-bold capitalize text-foreground">{activeTab}</h1>
               <p className="text-muted-foreground text-sm mt-1">Manage your {activeTab} settings</p>
             </div>
-            <Button onClick={handleSave} disabled={saveMutation.isPending} variant="gradient" className="shadow-lg shadow-emerald-500/20">
-              {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" /> Save Changes</>}
-            </Button>
+            <Tooltip content={<span>Save Changes <span className="text-emerald-300 ml-1 font-mono text-[10px]">Ctrl+S</span></span>} position="bottom">
+              <Button onClick={handleSave} disabled={saveMutation.isPending} variant="gradient" className="shadow-lg shadow-emerald-500/20">
+                {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" /> Save Changes</>}
+              </Button>
+            </Tooltip>
 
           </div>
 
@@ -707,7 +734,7 @@ export default function Admin() {
                       <h3 className="font-medium text-foreground">Profile Image</h3>
                       <p className="text-xs text-muted-foreground">Recommended: 400x400px. Max 2MB.</p>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="secondary" onClick={() => document.getElementById('file-upload')?.click()}>Upload</Button>
+                        <Button size="sm" variant="secondary" className="border border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 transition-all" onClick={() => document.getElementById('file-upload')?.click()}>Upload</Button>
                         <input 
                           id="file-upload" 
                           type="file" 
@@ -722,12 +749,7 @@ export default function Admin() {
                             reader.readAsDataURL(file);
                           }}
                         />
-                        <Input 
-                          placeholder="Or paste URL..." 
-                          value={user.image} 
-                          onChange={e => setUser({...user, image: e.target.value})}
-                          className="h-9 text-xs font-mono bg-muted/50"
-                        />
+
                       </div>
                     </div>
                   </div>
@@ -753,6 +775,7 @@ export default function Admin() {
                           placeholder="https://instagram.com/..." 
                           value={user.socialLinks?.instagram || ''} 
                           onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, instagram: e.target.value }})}
+                          onBlur={e => setUser({...user, socialLinks: { ...user.socialLinks, instagram: normalizeSocialUrl('instagram', e.target.value) }})}
                           className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                       </div>
@@ -764,17 +787,7 @@ export default function Admin() {
                           placeholder="https://twitter.com/..." 
                           value={user.socialLinks?.twitter || ''} 
                           onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, twitter: e.target.value }})}
-                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                          <Linkedin className="w-3 h-3" /> LinkedIn
-                        </label>
-                        <Input 
-                          placeholder="https://linkedin.com/in/..." 
-                          value={user.socialLinks?.linkedin || ''} 
-                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, linkedin: e.target.value }})}
+                          onBlur={e => setUser({...user, socialLinks: { ...user.socialLinks, twitter: normalizeSocialUrl('twitter', e.target.value) }})}
                           className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                       </div>
@@ -786,6 +799,7 @@ export default function Admin() {
                           placeholder="https://youtube.com/..." 
                           value={user.socialLinks?.youtube || ''} 
                           onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, youtube: e.target.value }})}
+                          onBlur={e => setUser({...user, socialLinks: { ...user.socialLinks, youtube: normalizeSocialUrl('youtube', e.target.value) }})}
                           className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                       </div>
@@ -797,17 +811,36 @@ export default function Admin() {
                           placeholder="https://facebook.com/..." 
                           value={user.socialLinks?.facebook || ''} 
                           onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, facebook: e.target.value }})}
+                          onBlur={e => setUser({...user, socialLinks: { ...user.socialLinks, facebook: normalizeSocialUrl('facebook', e.target.value) }})}
                           className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                          <Github className="w-3 h-3" /> GitHub
+                          <Pin className="w-3 h-3" /> Pinterest
                         </label>
                         <Input 
-                          placeholder="https://github.com/..." 
-                          value={user.socialLinks?.github || ''} 
-                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, github: e.target.value }})}
+                          placeholder="https://pinterest.com/..." 
+                          value={user.socialLinks?.pinterest || ''} 
+                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, pinterest: e.target.value }})}
+                          onBlur={e => setUser({...user, socialLinks: { ...user.socialLinks, pinterest: normalizeSocialUrl('pinterest', e.target.value) }})}
+                          className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <Mail className="w-3 h-3" /> Email
+                        </label>
+                        <Input 
+                          placeholder="your@email.com" 
+                          value={user.socialLinks?.email || ''} 
+                          onChange={e => setUser({...user, socialLinks: { ...user.socialLinks, email: e.target.value }})}
+                          onBlur={e => {
+                            const val = e.target.value;
+                            if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                              toast.error("Please enter a valid email address");
+                            }
+                          }}
                           className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                         />
                       </div>
