@@ -41,7 +41,8 @@ export async function PUT(
       links: rest.links,
       storeItems: rest.storeItems,
       socialLinks: rest.socialLinks,
-      themeColor: rest.themeColor
+      themeColor: rest.themeColor,
+      outfits: rest.outfits
     };
 
     const user = await User.findOneAndUpdate(

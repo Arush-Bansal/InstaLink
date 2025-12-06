@@ -31,7 +31,8 @@ import {
   Mail,
   Pin, // For Pinterest
   BarChart2,
-  Search
+  Search,
+  Shirt
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -90,6 +91,21 @@ interface UserData {
     email?: string;
   };
   themeColor: string;
+  outfits: Outfit[];
+}
+
+interface OutfitItem {
+  id: string;
+  title: string;
+  url: string;
+  x: number;
+  y: number;
+}
+
+interface Outfit {
+  id: string;
+  image: string;
+  items: OutfitItem[];
 }
 
 // --- Helpers ---
@@ -399,7 +415,7 @@ const normalizeSocialUrl = (platform: string, value: string) => {
 export default function Dashboard() {
   const [user, setUser] = useState<UserData | null>(null);
   const [username, setUsername] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'shop' | 'appearance'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'shop' | 'outfits' | 'appearance'>('profile');
   const [importUrl, setImportUrl] = useState("");
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -517,11 +533,17 @@ export default function Dashboard() {
       // Ensure all items have IDs
       const linksWithIds = (fetchedUser.links || []).map((l: any) => ({ ...l, id: l._id || l.id || generateId() }));
       const storeItemsWithIds = (fetchedUser.storeItems || []).map((s: any) => ({ ...s, id: s._id || s.id || generateId() }));
+      const outfitsWithIds = (fetchedUser.outfits || []).map((o: any) => ({
+        ...o,
+        id: o._id || o.id || generateId(),
+        items: (o.items || []).map((i: any) => ({ ...i, id: i._id || i.id || generateId() }))
+      }));
       
       setUser({ 
         ...fetchedUser, 
         links: linksWithIds,
-        storeItems: storeItemsWithIds 
+        storeItems: storeItemsWithIds,
+        outfits: outfitsWithIds
       });
     }
   }, [fetchedUser]);
@@ -621,6 +643,7 @@ export default function Dashboard() {
           { id: 'profile', label: 'Profile', icon: LayoutDashboard },
           { id: 'links', label: 'Links', icon: LinkIcon },
           { id: 'shop', label: 'Shop', icon: ShoppingBag },
+          { id: 'outfits', label: 'Outfits', icon: Shirt },
           { id: 'appearance', label: 'Theme', icon: Palette },
         ].map((item) => (
           <button
@@ -657,6 +680,7 @@ export default function Dashboard() {
             { id: 'profile', label: 'Profile', icon: LayoutDashboard },
             { id: 'links', label: 'Links', icon: LinkIcon },
             { id: 'shop', label: 'Shop', icon: ShoppingBag },
+            { id: 'outfits', label: 'Outfits', icon: Shirt },
             { id: 'appearance', label: 'Appearance', icon: Palette },
           ].map((item) => (
             <button
@@ -712,6 +736,212 @@ export default function Dashboard() {
 
           {/* Tab Content */}
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+            {/* OUTFITS TAB */}
+            {activeTab === 'outfits' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                   <h2 className="text-lg font-medium">My Outfits</h2>
+                   <Button 
+                     onClick={() => {
+                       const newOutfits = [...(user.outfits || [])];
+                       newOutfits.unshift({ id: generateId(), image: '', items: [] });
+                       setUser({ ...user, outfits: newOutfits });
+                     }}
+                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                   >
+                     <Plus className="w-4 h-4 mr-2" /> Add Outfit
+                   </Button>
+                </div>
+
+                <div className="space-y-6">
+                  {user.outfits?.map((outfit, index) => (
+                    <Card key={outfit.id} className="p-6 space-y-6 bg-white/60 backdrop-blur-sm border-emerald-100">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-medium text-emerald-900">Outfit #{user.outfits!.length - index}</h3>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="text-red-500 hover:bg-red-50"
+                          onClick={() => {
+                            const newOutfits = [...user.outfits!];
+                            newOutfits.splice(index, 1);
+                            setUser({ ...user, outfits: newOutfits });
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Image Area */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-muted-foreground">Outfit Photo</label>
+                          <div 
+                            className="relative aspect-[3/4] bg-muted rounded-xl overflow-hidden border-2 border-dashed border-emerald-200 group"
+                          >
+                             {outfit.image ? (
+                               <>
+                                 <img 
+                                   src={outfit.image} 
+                                   alt="Outfit" 
+                                   className="w-full h-full object-cover cursor-crosshair"
+                                   onClick={(e) => {
+                                      if (outfit.items.length >= 3) {
+                                        toast.error("Max 3 items per outfit");
+                                        return;
+                                      }
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                      const y = ((e.clientY - rect.top) / rect.height) * 100;
+                                      
+                                      const newOutfits = [...user.outfits!];
+                                      newOutfits[index].items.push({
+                                        id: generateId(),
+                                        title: '',
+                                        url: '',
+                                        x,
+                                        y
+                                      });
+                                      setUser({ ...user, outfits: newOutfits });
+                                   }}
+                                 />
+                                 {/* Dots */}
+                                 {outfit.items.map((item, itemIndex) => (
+                                   <div
+                                     key={item.id}
+                                     style={{ left: `${item.x}%`, top: `${item.y}%` }}
+                                     className="absolute w-6 h-6 -ml-3 -mt-3 bg-white rounded-full shadow-lg border-2 border-emerald-500 flex items-center justify-center text-[10px] font-bold text-emerald-700 cursor-pointer hover:scale-110 transition-transform"
+                                     title={item.title || 'New Item'}
+                                   >
+                                     {itemIndex + 1}
+                                   </div>
+                                 ))}
+                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    <span className="text-white text-sm font-medium">Click image to add tag</span>
+                                 </div>
+                               </>
+                             ) : (
+                               <div 
+                                 className="w-full h-full flex flex-col items-center justify-center text-emerald-500 cursor-pointer hover:bg-emerald-50 transition-colors"
+                                 onClick={() => document.getElementById(`outfit-upload-${outfit.id}`)?.click()}
+                               >
+                                 <ImageIcon className="w-8 h-8 mb-2" />
+                                 <span className="text-sm">Upload Photo</span>
+                               </div>
+                             )}
+                             <input 
+                                id={`outfit-upload-${outfit.id}`}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  if (file.size > 5 * 1024 * 1024) { toast.error("File too large (max 5MB)"); return; }
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    const newOutfits = [...user.outfits!];
+                                    newOutfits[index].image = reader.result as string;
+                                    setUser({ ...user, outfits: newOutfits });
+                                  };
+                                  reader.readAsDataURL(file);
+                                }}
+                             />
+                          </div>
+                          {outfit.image && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={() => document.getElementById(`outfit-upload-${outfit.id}`)?.click()}
+                            >
+                              Change Photo
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Items List */}
+                        <div className="space-y-4">
+                           <div className="flex items-center justify-between">
+                             <label className="text-sm font-medium text-muted-foreground">Tagged Items ({outfit.items.length}/3)</label>
+                             <span className="text-xs text-emerald-600">Click photo to add</span>
+                           </div>
+                           
+                           {outfit.items.length === 0 ? (
+                             <div className="text-center py-8 bg-muted/50 rounded-xl border border-dashed border-emerald-100 text-muted-foreground text-sm">
+                               Tap anywhere on the photo to tag an item
+                             </div>
+                           ) : (
+                             <div className="space-y-3">
+                               {outfit.items.map((item, itemIndex) => (
+                                 <div key={item.id} className="bg-white p-3 rounded-lg border border-emerald-100 shadow-sm space-y-2">
+                                    <div className="flex items-center gap-2">
+                                       <div className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+                                         {itemIndex + 1}
+                                       </div>
+                                       <Input 
+                                         placeholder="Item Name (e.g. White Tee)"
+                                         value={item.title}
+                                         onChange={(e) => {
+                                            const newOutfits = [...user.outfits!];
+                                            newOutfits[index].items[itemIndex].title = e.target.value;
+                                            setUser({ ...user, outfits: newOutfits });
+                                         }}
+                                         className="h-8 text-sm"
+                                       />
+                                       <Button
+                                         size="icon"
+                                         variant="ghost"
+                                         className="h-8 w-8 text-red-500 hover:bg-red-50"
+                                         onClick={() => {
+                                            const newOutfits = [...user.outfits!];
+                                            newOutfits[index].items.splice(itemIndex, 1);
+                                            setUser({ ...user, outfits: newOutfits });
+                                         }}
+                                       >
+                                         <Trash2 className="w-3 h-3" />
+                                       </Button>
+                                    </div>
+                                    <Input 
+                                       placeholder="Link URL"
+                                       value={item.url}
+                                       onChange={(e) => {
+                                          const newOutfits = [...user.outfits!];
+                                          newOutfits[index].items[itemIndex].url = e.target.value;
+                                          setUser({ ...user, outfits: newOutfits });
+                                       }}
+                                       className="h-8 text-xs font-mono"
+                                    />
+                                 </div>
+                               ))}
+                             </div>
+                           )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                  
+                  {(!user.outfits || user.outfits.length === 0) && (
+                    <div className="text-center py-12 bg-white/50 rounded-xl border border-dashed border-emerald-200">
+                       <Shirt className="w-12 h-12 mx-auto text-emerald-200 mb-4" />
+                       <h3 className="text-lg font-medium text-emerald-900">No outfits yet</h3>
+                       <p className="text-muted-foreground mb-4">Share your look with your followers</p>
+                       <Button 
+                         onClick={() => {
+                           const newOutfits = [...(user.outfits || [])];
+                           newOutfits.unshift({ id: generateId(), image: '', items: [] });
+                           setUser({ ...user, outfits: newOutfits });
+                         }}
+                         className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                       >
+                         <Plus className="w-4 h-4 mr-2" /> Create First Outfit
+                       </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* PROFILE TAB */}
             {activeTab === 'profile' && (

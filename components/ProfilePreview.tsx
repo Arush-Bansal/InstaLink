@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Instagram, Twitter, Globe, ShoppingBag, Mail, ArrowUpRight, Search, Share2, Youtube, Facebook, Pin } from "lucide-react";
+import { Instagram, Twitter, Globe, ShoppingBag, Mail, ArrowUpRight, Search, Share2, Youtube, Facebook, Pin, Shirt } from "lucide-react";
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import Fuse from "fuse.js";
@@ -43,6 +43,21 @@ export interface UserData {
     email?: string;
   };
   themeColor: string;
+  outfits?: Outfit[];
+}
+
+export interface OutfitItem {
+  id: string;
+  title: string;
+  url: string;
+  x: number;
+  y: number;
+}
+
+export interface Outfit {
+  id: string;
+  image: string;
+  items: OutfitItem[];
 }
 
 interface ProfilePreviewProps {
@@ -119,8 +134,9 @@ const formatUrl = (url: string) => {
 };
 
 export default function ProfilePreview({ user, isPreview = false, onLinkClick }: ProfilePreviewProps) {
-  const [activeTab, setActiveTab] = useState<'links' | 'shop'>('links');
+  const [activeTab, setActiveTab] = useState<'links' | 'shop' | 'outfits'>('links');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeOutfitItem, setActiveOutfitItem] = useState<string | null>(null);
 
   const filteredStoreItems = useMemo(() => {
     if (!user?.storeItems) return [];
@@ -249,6 +265,18 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
               <ShoppingBag className="w-4 h-4" />
               <span>Shop</span>
             </button>
+            <button 
+              onClick={() => setActiveTab('outfits')}
+              className={`
+                relative flex items-center gap-2 py-2.5 px-6 text-sm font-medium rounded-full transition-all duration-300
+                ${activeTab === 'outfits' 
+                  ? `${themeColors.accent} text-white shadow-sm` 
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}
+              `}
+            >
+              <Shirt className="w-4 h-4" />
+              <span>Outfits</span>
+            </button>
           </div>
         </div>
 
@@ -287,7 +315,7 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
                 </a>
               ))}
             </div>
-          ) : (
+          ) : activeTab === 'shop' ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500">
               {/* Shop Header & Search */}
               {user.storeItems && user.storeItems.length > 0 ? (
@@ -385,6 +413,94 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
                 <div className="text-center text-slate-400 py-20 bg-white/50 rounded-3xl border border-dashed border-slate-200">
                   <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
                   <p>No shop items available yet</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* OUTFITS TAB CONTENT */
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-500">
+              {user.outfits && user.outfits.length > 0 ? (
+                user.outfits.map((outfit) => (
+                  <div key={outfit.id} className="space-y-4">
+                    {/* Main Image with Hotspots */}
+                    <div className="relative rounded-3xl overflow-hidden shadow-lg bg-slate-100">
+                       <img src={outfit.image} alt="Outfit" className="w-full h-auto object-cover" />
+                       
+                       {/* Hotspots */}
+                       {outfit.items.map((item) => (
+                         <button
+                           key={item.id}
+                           style={{ left: `${item.x}%`, top: `${item.y}%` }}
+                           className={`absolute w-8 h-8 -ml-4 -mt-4 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 z-10 ${
+                             activeOutfitItem === item.id 
+                               ? 'bg-white scale-125 ring-4 ring-emerald-500/30 text-emerald-600' 
+                               : 'bg-white/80 backdrop-blur-sm hover:bg-white text-slate-600'
+                           }`}
+                           onClick={() => {
+                             setActiveOutfitItem(item.id);
+                             const container = document.getElementById(`outfit-carousel-${outfit.id}`);
+                             const element = document.getElementById(`outfit-item-${item.id}`);
+                             
+                             if (container && element) {
+                               const containerRect = container.getBoundingClientRect();
+                               const elementRect = element.getBoundingClientRect();
+                               const scrollLeft = container.scrollLeft + (elementRect.left - containerRect.left) - (containerRect.width / 2) + (elementRect.width / 2);
+                               
+                               container.scrollTo({
+                                 left: scrollLeft,
+                                 behavior: 'smooth'
+                               });
+                             }
+                           }}
+                         >
+                           <div className={`w-2 h-2 rounded-full ${activeOutfitItem === item.id ? 'bg-emerald-500' : 'bg-current'}`} />
+                         </button>
+                       ))}
+                    </div>
+
+                    {/* Carousel */}
+                    <div 
+                      id={`outfit-carousel-${outfit.id}`}
+                      className="flex gap-4 overflow-x-auto pb-4 px-1 snap-x snap-mandatory no-scrollbar scroll-smooth"
+                    >
+                      {outfit.items.map((item) => (
+                        <div 
+                          key={item.id}
+                          id={`outfit-item-${item.id}`}
+                          className={`snap-center shrink-0 w-[85%] md:w-[45%] bg-white rounded-2xl p-4 border shadow-sm transition-all duration-300 ${
+                            activeOutfitItem === item.id 
+                              ? 'border-emerald-500 ring-1 ring-emerald-500 shadow-emerald-500/10' 
+                              : 'border-slate-100 hover:border-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                             <div>
+                               <h4 className="font-medium text-slate-900 line-clamp-1">{item.title}</h4>
+                               <p className="text-xs text-slate-500 truncate">{new URL(formatUrl(item.url)).hostname.replace('www.', '')}</p>
+                             </div>
+                             <a 
+                               href={isPreview ? '#' : formatUrl(item.url)}
+                               target={isPreview ? undefined : "_blank"}
+                               rel="noopener noreferrer"
+                               onClick={(e) => {
+                                 if (isPreview) e.preventDefault();
+                                 handleItemClick(item.id, 'link'); // Tracking as link for now
+                               }}
+                             >
+                               <Button size="sm" className="rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-none h-9 px-4">
+                                 Shop
+                               </Button>
+                             </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-slate-400 py-20 bg-white/50 rounded-3xl border border-dashed border-slate-200">
+                  <Shirt className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>No outfits posted yet</p>
                 </div>
               )}
             </div>

@@ -38,8 +38,23 @@ export interface IUser {
   storeItems?: IStoreItem[];
   socialLinks?: ISocialLinks;
   themeColor?: string;
+  outfits?: IOutfit[];
   createdAt?: Date;
   password?: string;
+}
+
+export interface IOutfitItem {
+  id: string;
+  title: string;
+  url: string;
+  x: number;
+  y: number;
+}
+
+export interface IOutfit {
+  id: string;
+  image: string;
+  items: IOutfitItem[];
 }
 
 const LinkSchema = new Schema<ILink>({
@@ -56,6 +71,20 @@ const StoreItemSchema = new Schema<IStoreItem>({
   clicks: { type: Number, default: 0 },
 });
 
+const OutfitItemSchema = new Schema<IOutfitItem>({
+  id: { type: String, required: true },
+  title: { type: String, required: true },
+  url: { type: String, required: true },
+  x: { type: Number, required: true },
+  y: { type: Number, required: true },
+});
+
+const OutfitSchema = new Schema<IOutfit>({
+  id: { type: String, required: true },
+  image: { type: String, required: true },
+  items: { type: [OutfitItemSchema], default: [] },
+});
+
 const UserSchema = new Schema<IUser>({
   username: { type: String, required: false, unique: true, index: true, sparse: true }, // Username is optional initially (until onboarding)
   email: { type: String, required: true, unique: true, index: true },
@@ -64,6 +93,7 @@ const UserSchema = new Schema<IUser>({
   image: { type: String, default: '' },
   links: { type: [LinkSchema], default: [] },
   storeItems: { type: [StoreItemSchema], default: [] },
+  outfits: { type: [OutfitSchema], default: [] },
   socialLinks: {
     instagram: { type: String, default: '' },
     twitter: { type: String, default: '' },
