@@ -52,7 +52,7 @@ export default function NotFound() {
 
       {/* Footer-like element */}
       <div className="absolute bottom-8 text-sm text-muted-foreground">
-        InstaLink &copy; {new Date().getFullYear()}
+        GrifiLinks &copy; {new Date().getFullYear()}
       </div>
 
     </main>

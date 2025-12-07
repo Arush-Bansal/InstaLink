@@ -625,7 +625,7 @@ export default function Dashboard() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
             <Share2 className="w-5 h-5" />
           </div>
-          InstaLink
+          GrifiLinks
         </div>
         <div className="flex gap-2">
            <Button size="icon" variant="ghost" onClick={() => window.open(`/${user.username}`, '_blank')}>
@@ -671,7 +671,7 @@ export default function Dashboard() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
               <Share2 className="w-5 h-5" />
             </div>
-            InstaLink
+            GrifiLinks
           </div>
         </div>
 

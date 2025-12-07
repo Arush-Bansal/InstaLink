@@ -510,7 +510,7 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
         <div className="text-center py-8">
            <a href="/" className="inline-flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-slate-900 transition-colors">
              <span>Powered by</span>
-             <span className="font-bold text-slate-900">InstaLink</span>
+             <span className="font-bold text-slate-900">GrifiLinks</span>
            </a>
         </div>
 

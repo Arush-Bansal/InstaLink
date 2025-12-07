@@ -217,7 +217,7 @@ function HomeContent() {
                 <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground font-medium">
-                      instalink.com/
+                      grifilinks.com/
                     </div>
                     <Input 
                       autoFocus
@@ -339,7 +339,7 @@ function HomeContent() {
           <div className="text-center mb-20">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-slate-900">Designed for <span className="text-gradient">Visual Storytellers</span></h2>
             <p className="text-slate-600 text-xl max-w-3xl mx-auto">
-              Fashion isn't just about links; it's about the look. Standard bio tools are text-heavy and boring. InstaLink is built to showcase your aesthetic and drive sales.
+              Fashion isn't just about links; it's about the look. Standard bio tools are text-heavy and boring. GrifiLinks is built to showcase your aesthetic and drive sales.
             </p>
           </div>
           
@@ -473,7 +473,7 @@ function HomeContent() {
           <div className="space-y-6">
             {[
               {
-                q: "Is InstaLink optimized for mobile?",
+                q: "Is GrifiLinks optimized for mobile?",
                 a: "100%. We prioritize mobile-first design because that's where your audience lives. Your page will look flawless on any device."
               },
               {
@@ -498,14 +498,14 @@ function HomeContent() {
       <footer className="py-12 px-4 border-t border-emerald-100 text-center text-muted-foreground bg-white">
         <div className="flex items-center justify-center gap-2 mb-8">
           <Zap className="w-6 h-6 text-emerald-500" />
-          <span className="font-bold text-2xl text-foreground tracking-tight">InstaLink</span>
+          <span className="font-bold text-2xl text-foreground tracking-tight">GrifiLinks</span>
         </div>
         <div className="flex justify-center gap-8 mb-8">
           <a href="#" className="hover:text-emerald-600 transition-colors">Terms</a>
           <a href="#" className="hover:text-emerald-600 transition-colors">Privacy</a>
           <a href="#" className="hover:text-emerald-600 transition-colors">Contact</a>
         </div>
-        <p>&copy; 2024 InstaLink. Designed for Creators.</p>
+        <p>&copy; 2024 GrifiLinks. Designed for Creators.</p>
       </footer>
 
     </main>

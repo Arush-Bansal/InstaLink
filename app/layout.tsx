@@ -12,7 +12,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "InstaLink - Premium Link in Bio",
+  title: "GrifiLinks - Premium Link in Bio",
   description: "A better, more beautiful link in bio experience.",
 };
 

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       user = await User.create({
         username: cleanUsername,
         title: `@${cleanUsername}`,
-        bio: 'Welcome to my InstaLink profile!',
+        bio: 'Welcome to my GrifiLinks profile!',
         image: '', // Default or placeholder
         links: [],
         storeItems: [

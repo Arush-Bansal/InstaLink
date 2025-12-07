@@ -73,13 +73,13 @@ export default function Onboarding() {
             <Sparkles className="w-6 h-6" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Claim your handle</h1>
-          <p className="text-slate-600">Choose a unique username for your InstaLink profile.</p>
+          <p className="text-slate-600">Choose a unique username for your GrifiLinks profile.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-medium">instalink.com/</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-medium">grifilinks.com/</span>
               <Input 
                 placeholder="username" 
                 className="h-14 pl-32 text-lg bg-white border-emerald-100 focus:border-emerald-500 transition-all rounded-xl text-foreground placeholder:text-muted-foreground/50 shadow-sm"
