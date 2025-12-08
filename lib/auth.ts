@@ -107,7 +107,7 @@ export const authOptions: NextAuthOptions = {
                 image: user.image || DEFAULT_PROFILE_IMAGE,
                 title: user.name || "New User",
                 ...DEFAULT_USER_DATA,
-              } as any);
+              } as any) as any;
               console.log("User created successfully:", newUser._id);
             } catch (createError) {
               console.error("Detailed error creating user:", createError);
