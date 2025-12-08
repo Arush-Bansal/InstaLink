@@ -225,10 +225,7 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
              }}
              className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
            />
-           <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
-              <BarChart2 className="w-3 h-3" />
-              <span>{link.clicks || 0}</span>
-           </div>
+
         </div>
         <Input 
           placeholder="URL (https://...)" 
@@ -240,6 +237,12 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
           }}
           className="bg-white/50 border-emerald-100 text-xs font-mono text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
         />
+        <div className="flex items-center gap-2 mt-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium border border-emerald-100">
+            <BarChart2 className="w-3 h-3" />
+            <span>{link.clicks || 0} clicks</span>
+          </div>
+        </div>
       </div>
       <Button 
         size="icon" 
@@ -307,10 +310,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
         <div className={`absolute inset-0 bg-emerald-900/20 flex items-center justify-center transition-opacity pointer-events-none ${item.image ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
           <span className="text-xs font-medium text-white">Upload (Click) <br/> Move (Hold)</span>
         </div>
-        <div className="absolute top-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm">
-          <BarChart2 className="w-3 h-3" />
-          {item.clicks || 0}
-        </div>
+
       </div>
       <input 
         id={`store-image-${item.id}`}
@@ -364,6 +364,12 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
           }}
           className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
         />
+        <div className="flex items-center gap-2 mt-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium border border-emerald-100">
+            <BarChart2 className="w-3 h-3" />
+            <span>{item.clicks || 0} clicks</span>
+          </div>
+        </div>
       </div>
       <Button 
         size="icon" 
@@ -620,7 +626,7 @@ export default function Dashboard() {
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-emerald-100 z-30 flex items-center justify-between px-4">
         <div 
           className="flex items-center gap-2 font-bold text-lg text-foreground cursor-pointer"
-          onClick={() => window.location.reload()}
+          onClick={() => router.push('/')}
         >
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
             <Share2 className="w-5 h-5" />
@@ -666,7 +672,7 @@ export default function Dashboard() {
         <div className="p-6 border-b border-emerald-100">
           <div 
             className="flex items-center gap-2 font-bold text-xl tracking-tight text-foreground cursor-pointer"
-            onClick={() => window.location.reload()}
+            onClick={() => router.push('/')}
           >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white">
               <Share2 className="w-5 h-5" />

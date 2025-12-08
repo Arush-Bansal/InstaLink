@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -503,7 +504,8 @@ function HomeContent() {
         <div className="flex justify-center gap-8 mb-8">
           <a href="#" className="hover:text-emerald-600 transition-colors">Terms</a>
           <a href="#" className="hover:text-emerald-600 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-emerald-600 transition-colors">Contact</a>
+          <Link href="/about" className="hover:text-emerald-600 transition-colors">About Us</Link>
+          <Link href="/about" className="hover:text-emerald-600 transition-colors">Contact</Link>
         </div>
         <p>&copy; 2024 GrifiLinks. Designed for Creators.</p>
       </footer>
