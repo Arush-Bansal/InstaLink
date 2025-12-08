@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Instagram, Twitter, Globe, ShoppingBag, Mail, ArrowUpRight, Search, Share2, Youtube, Facebook, Pin, Shirt } from "lucide-react";
+import { Instagram, Twitter, Globe, Map, Mail, ArrowUpRight, Share2, Youtube, Facebook, Pin, Calendar, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import { iconMap } from "@/components/icons";
 import Image from "next/image";
 import { useState, useMemo } from "react";
@@ -19,13 +19,18 @@ export interface LinkData {
   id?: string; // For dashboard compatibility
 }
 
-export interface StoreItem {
+export interface TripItem {
+  id: string;
+  type: 'link' | 'header';
   title: string;
-  image: string;
-  price: string;
   url?: string;
-  _id?: string;
-  id?: string; // For dashboard compatibility
+}
+
+export interface Trip {
+  id: string;
+  title: string;
+  date?: string;
+  items: TripItem[];
 }
 
 export interface UserData {
@@ -34,7 +39,7 @@ export interface UserData {
   bio: string;
   image: string;
   links: LinkData[];
-  storeItems?: StoreItem[];
+  trips: Trip[];
   socialLinks?: {
     instagram?: string;
     twitter?: string;
@@ -45,21 +50,6 @@ export interface UserData {
     email?: string;
   };
   themeColor: string;
-  outfits?: Outfit[];
-}
-
-export interface OutfitItem {
-  id: string;
-  title: string;
-  url: string;
-  x: number;
-  y: number;
-}
-
-export interface Outfit {
-  id: string;
-  image: string;
-  items: OutfitItem[];
 }
 
 interface ProfilePreviewProps {
@@ -136,21 +126,8 @@ const formatUrl = (url: string) => {
 };
 
 export default function ProfilePreview({ user, isPreview = false, onLinkClick }: ProfilePreviewProps) {
-  const [activeTab, setActiveTab] = useState<'links' | 'shop' | 'outfits'>('links');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeOutfitItem, setActiveOutfitItem] = useState<string | null>(null);
-
-  const filteredStoreItems = useMemo(() => {
-    if (!user?.storeItems) return [];
-    if (!searchQuery) return user.storeItems;
-
-    const fuse = new Fuse(user.storeItems, {
-      keys: ['title', 'price'],
-      threshold: 0.4,
-    });
-
-    return fuse.search(searchQuery).map(result => result.item);
-  }, [user?.storeItems, searchQuery]);
+  const [activeTab, setActiveTab] = useState<'links' | 'trips'>('links');
+  const [expandedTrip, setExpandedTrip] = useState<string | null>(null);
 
   const themeColors = getThemeColors(user.themeColor || 'indigo');
 
@@ -256,28 +233,16 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
               <span>Links</span>
             </button>
             <button 
-              onClick={() => setActiveTab('shop')}
+              onClick={() => setActiveTab('trips')}
               className={`
                 relative flex items-center gap-2 py-2.5 px-6 text-sm font-medium rounded-full transition-all duration-300
-                ${activeTab === 'shop' 
+                ${activeTab === 'trips' 
                   ? `${themeColors.accent} text-white shadow-sm` 
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}
               `}
             >
-              <ShoppingBag className="w-4 h-4" />
-              <span>Shop</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('outfits')}
-              className={`
-                relative flex items-center gap-2 py-2.5 px-6 text-sm font-medium rounded-full transition-all duration-300
-                ${activeTab === 'outfits' 
-                  ? `${themeColors.accent} text-white shadow-sm` 
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}
-              `}
-            >
-              <Shirt className="w-4 h-4" />
-              <span>Outfits</span>
+              <Map className="w-4 h-4" />
+              <span>Trips</span>
             </button>
           </div>
         </div>
@@ -320,192 +285,67 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
                 </a>
               ))}
             </div>
-          ) : activeTab === 'shop' ? (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500">
-              {/* Shop Header & Search */}
-              {user.storeItems && user.storeItems.length > 0 ? (
-                <>
-                  {user.storeItems.length > 2 && (
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <Input 
-                        placeholder="Search products..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-11 h-12 bg-white border-slate-200 focus:border-slate-900 focus:ring-slate-900/10 rounded-2xl shadow-sm"
-                      />
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {filteredStoreItems.map((item, i) => (
-                      <div key={i} className={`group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm ${themeColors.hoverShadow} transition-all duration-300`}>
-                          {item.url ? (
-                            <a 
-                              href={isPreview ? '#' : formatUrl(item.url)}
-                              target={isPreview ? undefined : "_blank"}
-                              rel="noopener noreferrer"
-                              className="relative aspect-square overflow-hidden bg-slate-50 block"
-                              onClick={(e) => {
-                                if (isPreview) e.preventDefault();
-                                handleItemClick(item._id || item.id, 'store');
-                              }}
-                            >
-                          {item.image ? (
-                            <Image 
-                              src={item.image} 
-                              alt={item.title} 
-                              fill 
-                              className="object-cover transition-transform duration-700 group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
-                              <ShoppingBag className="w-8 h-8" />
-                            </div>
-                          )}
-                            </a>
-                          ) : (
-                            <div className="relative aspect-square overflow-hidden bg-slate-50">
-                          {item.image ? (
-                            <Image 
-                              src={item.image} 
-                              alt={item.title} 
-                              fill 
-                              className="object-cover transition-transform duration-700 group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
-                              <ShoppingBag className="w-8 h-8" />
-                            </div>
-                          )}
-                            </div>
-                          )}
-                          <div className="p-4 flex-1 flex flex-col">
-                            <h3 className="font-medium text-sm text-slate-900 line-clamp-2 mb-1">{item.title}</h3>
-                            <p className="text-sm font-semibold text-emerald-600 mb-3">{item.price}</p>
-                            {item.url ? (
+          ) : (
+            /* TRIPS TAB CONTENT */
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+              {user.trips && user.trips.length > 0 ? (
+                user.trips.map((trip) => (
+                  <div key={trip.id} className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm">
+                     <button 
+                       onClick={() => setExpandedTrip(expandedTrip === trip.id ? null : trip.id)}
+                       className="w-full p-5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
+                     >
+                       <div>
+                         <h3 className="font-semibold text-slate-900 text-lg">{trip.title}</h3>
+                         {trip.date && <p className="text-sm text-slate-500 flex items-center gap-1 mt-1"><Calendar className="w-3 h-3" /> {trip.date}</p>}
+                       </div>
+                       {expandedTrip === trip.id ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                     </button>
+                     
+                     {expandedTrip === trip.id && (
+                       <div className="p-5 pt-0 space-y-3 border-t border-slate-100 bg-slate-50/50">
+                          <div className="h-4"></div>
+                          {trip.items.map((item) => (
+                            item.type === 'header' ? (
+                              <div key={item.id} className="pt-4 pb-2 first:pt-0">
+                                <h4 className="font-bold text-xs uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  {item.title}
+                                </h4>
+                              </div>
+                            ) : (
                               <a 
-                                href={isPreview ? '#' : formatUrl(item.url)}
+                                key={item.id}
+                                href={isPreview ? '#' : formatUrl(item.url || '')}
                                 target={isPreview ? undefined : "_blank"}
                                 rel="noopener noreferrer"
-                                className="w-full mt-auto"
+                                className="block group"
                                 onClick={(e) => {
                                   if (isPreview) e.preventDefault();
-                                  handleItemClick(item._id || item.id, 'store');
+                                  handleItemClick(item.id, 'link');
                                 }}
                               >
-                                <Button size="sm" className="w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-none">
-                                  View
-                                </Button>
+                                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-emerald-500/10 transition-all flex items-center justify-between group-hover:-translate-y-0.5">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                      <MapPin className="w-4 h-4" />
+                                    </div>
+                                    <span className="font-medium text-slate-700 group-hover:text-slate-900">{item.title}</span>
+                                  </div>
+                                  <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                                </div>
                               </a>
-                            ) : (
-                              <Button size="sm" className="w-full mt-auto rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-none">
-                                View
-                              </Button>
-                            )}
-                          </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {filteredStoreItems.length === 0 && (
-                     <div className="text-center py-12 text-slate-400 bg-white rounded-3xl border border-dashed border-slate-200">
-                        <p>No products found matching "{searchQuery}"</p>
-                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center text-slate-400 py-20 bg-white/50 rounded-3xl border border-dashed border-slate-200">
-                  <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                  <p>No shop items available yet</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* OUTFITS TAB CONTENT */
-            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-500">
-              {user.outfits && user.outfits.length > 0 ? (
-                user.outfits.map((outfit) => (
-                  <div key={outfit.id} className="space-y-4">
-                    {/* Main Image with Hotspots */}
-                    <div className="relative rounded-3xl overflow-hidden shadow-lg bg-slate-100">
-                       <img src={outfit.image} alt="Outfit" className="w-full h-auto object-cover" />
-                       
-                       {/* Hotspots */}
-                       {outfit.items.map((item) => (
-                         <button
-                           key={item.id}
-                           style={{ left: `${item.x}%`, top: `${item.y}%` }}
-                           className={`absolute w-8 h-8 -ml-4 -mt-4 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 z-10 ${
-                             activeOutfitItem === item.id 
-                               ? 'bg-white scale-125 ring-4 ring-emerald-500/30 text-emerald-600' 
-                               : 'bg-white/80 backdrop-blur-sm hover:bg-white text-slate-600'
-                           }`}
-                           onClick={() => {
-                             setActiveOutfitItem(item.id);
-                             const container = document.getElementById(`outfit-carousel-${outfit.id}`);
-                             const element = document.getElementById(`outfit-item-${item.id}`);
-                             
-                             if (container && element) {
-                               const containerRect = container.getBoundingClientRect();
-                               const elementRect = element.getBoundingClientRect();
-                               const scrollLeft = container.scrollLeft + (elementRect.left - containerRect.left) - (containerRect.width / 2) + (elementRect.width / 2);
-                               
-                               container.scrollTo({
-                                 left: scrollLeft,
-                                 behavior: 'smooth'
-                               });
-                             }
-                           }}
-                         >
-                           <div className={`w-2 h-2 rounded-full ${activeOutfitItem === item.id ? 'bg-emerald-500' : 'bg-current'}`} />
-                         </button>
-                       ))}
-                    </div>
-
-                    {/* Carousel */}
-                    <div 
-                      id={`outfit-carousel-${outfit.id}`}
-                      className="flex gap-4 overflow-x-auto pb-4 px-1 snap-x snap-mandatory no-scrollbar scroll-smooth"
-                    >
-                      {outfit.items.map((item) => (
-                        <div 
-                          key={item.id}
-                          id={`outfit-item-${item.id}`}
-                          className={`snap-center shrink-0 w-[85%] md:w-[45%] bg-white rounded-2xl p-4 border shadow-sm transition-all duration-300 ${
-                            activeOutfitItem === item.id 
-                              ? 'border-emerald-500 ring-1 ring-emerald-500 shadow-emerald-500/10' 
-                              : 'border-slate-100 hover:border-slate-200'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-4">
-                             <div>
-                               <h4 className="font-medium text-slate-900 line-clamp-1">{item.title}</h4>
-                               <p className="text-xs text-slate-500 truncate">{new URL(formatUrl(item.url)).hostname.replace('www.', '')}</p>
-                             </div>
-                             <a 
-                               href={isPreview ? '#' : formatUrl(item.url)}
-                               target={isPreview ? undefined : "_blank"}
-                               rel="noopener noreferrer"
-                               onClick={(e) => {
-                                 if (isPreview) e.preventDefault();
-                                 handleItemClick(item.id, 'link'); // Tracking as link for now
-                               }}
-                             >
-                               <Button size="sm" className="rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-none h-9 px-4">
-                                 Shop
-                               </Button>
-                             </a>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                            )
+                          ))}
+                          {trip.items.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4">No items in this trip yet.</p>}
+                       </div>
+                     )}
                   </div>
                 ))
               ) : (
                 <div className="text-center text-slate-400 py-20 bg-white/50 rounded-3xl border border-dashed border-slate-200">
-                  <Shirt className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                  <p>No outfits posted yet</p>
+                  <Map className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>No trips posted yet</p>
                 </div>
               )}
             </div>

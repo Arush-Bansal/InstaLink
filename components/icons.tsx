@@ -95,7 +95,10 @@ import {
   Tv,
   User,
   Watch,
-  Wrench
+  Wrench,
+  Plane,
+  Tent,
+  Luggage
 } from "lucide-react";
 
 export const iconMap: Record<string, any> = {
@@ -195,7 +198,10 @@ export const iconMap: Record<string, any> = {
   Tv,
   User,
   Watch,
-  Wrench
+  Wrench,
+  Plane,
+  Tent,
+  Luggage
 };
 
 export const iconNames = Object.keys(iconMap);

@@ -7,26 +7,35 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
 
-const DEFAULT_PROFILE_IMAGE = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop";
+const DEFAULT_PROFILE_IMAGE = "https://images.unsplash.com/photo-1503220317375-aaad6143d41b?w=400&h=400&fit=crop";
 
 export const DEFAULT_USER_DATA = {
-  bio: "Fashion & Lifestyle Creator 🇮🇳 | Sharing my style journey",
+  bio: "Travel & Adventure Creator 🇮🇳 | Exploring the world one city at a time",
   links: [
-    { title: "My Myntra Finds", url: "https://www.myntra.com", icon: "ShoppingBag" },
-    { title: "Amazon Favorites", url: "https://www.amazon.in", icon: "Star" },
-    { title: "Latest YouTube Vlog", url: "https://youtube.com", icon: "Youtube" }
+    { title: "My Travel Blog", url: "https://example.com/blog", icon: "Globe" },
+    { title: "Best Flight Deals", url: "https://skyscanner.com", icon: "Plane" },
+    { title: "Latest Vlog: Bali", url: "https://youtube.com", icon: "Youtube" }
   ],
-  storeItems: [
-    { title: "Floral Summer Dress", price: "₹1,499", image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop", url: "#" },
-    { title: "Designer Handbag", price: "₹2,999", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop", url: "#" },
-    { title: "Chic Sunglasses", price: "₹999", image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop", url: "#" }
+  trips: [
+    {
+      id: "trip_1",
+      title: "Bali 2024 🌴",
+      date: "August 2024",
+      items: [
+        { id: "item_1", type: "header", title: "Day 1: Seminyak Arrival" },
+        { id: "item_2", type: "link", title: "Potato Head Beach Club", url: "https://potatohead.co" },
+        { id: "item_3", type: "link", title: "W Hotel Seminyak", url: "https://marriott.com" },
+        { id: "item_4", type: "header", title: "Day 2: Ubud Vibes" },
+        { id: "item_5", type: "link", title: "Sacred Monkey Forest", url: "https://monkeyforestubud.com" }
+      ]
+    }
   ],
   socialLinks: {
     instagram: "https://instagram.com",
     pinterest: "https://pinterest.com",
     youtube: "https://youtube.com"
   },
-  themeColor: "rose"
+  themeColor: "cyan"
 };
 
 export const authOptions: NextAuthOptions = {
@@ -75,7 +84,7 @@ export const authOptions: NextAuthOptions = {
             title: credentials.username,
             image: DEFAULT_PROFILE_IMAGE,
             ...DEFAULT_USER_DATA,
-          });
+          } as any) as any;
           return {
             id: newUser._id.toString(),
             email: newUser.email,

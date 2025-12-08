@@ -49,13 +49,7 @@ export async function POST(request: Request) {
         // Add default store items if they don't exist? 
         // The previous logic did this on creation. 
         // Since we created the user on login without these, we should add them now if empty.
-        $setOnInsert: {
-            storeItems: [
-                { title: 'Minimalist Tee', price: '$35.00', image: '/store/tshirt.png', url: '#' },
-                { title: 'Abstract Print', price: '$120.00', image: '/store/art.png', url: '#' },
-                { title: 'Digital Asset Pack', price: '$49.00', image: '/store/pack.png', url: '#' }
-            ]
-        }
+
       },
       { new: true }
     );
@@ -65,8 +59,8 @@ export async function POST(request: Request) {
     // Let's just check and update.
     if (user) {
         let changed = false;
-        if (!user.storeItems || user.storeItems.length === 0) {
-            user.storeItems = DEFAULT_USER_DATA.storeItems;
+        if (!user.trips || user.trips.length === 0) {
+            user.trips = DEFAULT_USER_DATA.trips as any;
             changed = true;
         }
         if (!user.links || user.links.length === 0) {

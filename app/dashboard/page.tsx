@@ -17,7 +17,6 @@ import ProfilePreview from "@/components/ProfilePreview";
 import { 
   LayoutDashboard, 
   Link as LinkIcon, 
-  ShoppingBag, 
   Palette, 
   Settings, 
   LogOut, 
@@ -37,10 +36,18 @@ import {
   Facebook,
   Mail,
   Pin, // For Pinterest
+  Map,
+  Plane,
+  Tent,
+  Luggage,
+  Ticket,
+  Compass,
+  ChevronDown,
+  ChevronRight,
+  Calendar,
   BarChart2,
-  Search,
-  Shirt,
-  GripVertical
+  GripVertical,
+  Search
 } from "lucide-react";
 import { iconMap, iconNames } from "@/components/icons";
 
@@ -77,13 +84,19 @@ interface Link {
   clicks?: number;
 }
 
-interface StoreItem {
+interface TripItem {
   id: string;
+  type: 'link' | 'header';
   title: string;
-  image: string;
-  price: string;
   url?: string;
   clicks?: number;
+}
+
+interface Trip {
+  id: string;
+  title: string;
+  date?: string;
+  items: TripItem[];
 }
 
 interface UserData {
@@ -92,7 +105,7 @@ interface UserData {
   bio: string;
   image: string;
   links: Link[];
-  storeItems: StoreItem[];
+  trips: Trip[];
   socialLinks?: {
     instagram?: string;
     twitter?: string;
@@ -102,21 +115,6 @@ interface UserData {
     email?: string;
   };
   themeColor: string;
-  outfits: Outfit[];
-}
-
-interface OutfitItem {
-  id: string;
-  title: string;
-  url: string;
-  x: number;
-  y: number;
-}
-
-interface Outfit {
-  id: string;
-  image: string;
-  items: OutfitItem[];
 }
 
 // --- Helpers ---
@@ -335,7 +333,7 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
   );
 }
 
-function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, index: number, user: UserData, setUser: (u: UserData) => void }) {
+function SortableTrip({ trip, index, user, setUser }: { trip: Trip, index: number, user: UserData, setUser: (u: UserData) => void }) {
   const {
     attributes,
     listeners,
@@ -343,7 +341,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
     transform,
     transition,
     isDragging
-  } = useSortable({ id: item.id });
+  } = useSortable({ id: trip.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -352,113 +350,160 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Helper to update a specific trip item
+  const updateTripItem = (itemIndex: number, updates: Partial<TripItem>) => {
+    const newTrips = [...user.trips];
+    newTrips[index].items[itemIndex] = { ...newTrips[index].items[itemIndex], ...updates };
+    setUser({ ...user, trips: newTrips });
+  };
+
+  // Helper to remove a trip item
+  const removeTripItem = (itemIndex: number) => {
+    const newTrips = [...user.trips];
+    newTrips[index].items.splice(itemIndex, 1);
+    setUser({ ...user, trips: newTrips });
+  };
+
+  // Helper to add a trip item
+  const addTripItem = (type: 'link' | 'header') => {
+    const newTrips = [...user.trips];
+    newTrips[index].items.push({
+      id: crypto.randomUUID(),
+      type,
+      title: '',
+      url: type === 'link' ? '' : undefined
+    });
+    setUser({ ...user, trips: newTrips });
+    setIsExpanded(true);
+  };
+
   return (
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="flex flex-col sm:flex-row gap-4 sm:items-center items-start bg-white/80 p-4 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
+      className="bg-white/80 rounded-xl border border-emerald-100 hover:border-emerald-300 transition-all duration-300 overflow-hidden"
     >
-      <div 
-        className="text-muted-foreground cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-emerald-50 rounded-md transition-colors"
-        {...attributes} 
-        {...listeners}
-      >
-        <GripVertical className="w-5 h-5" />
-      </div>
-
-      <div 
-        className="w-full sm:w-24 h-48 sm:h-24 rounded-lg bg-muted border border-border overflow-hidden relative shrink-0 group cursor-pointer"
-      >
-         {/* Separate click handler for image upload vs drag */}
-         <div 
-            className="absolute inset-0 z-10" 
-            onClick={(e) => {
-               document.getElementById(`store-image-${item.id}`)?.click();
-            }}
-         />
-        {item.image ? (
-          <img src={item.image} alt="" className="w-full h-full object-cover pointer-events-none" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <ImageIcon className="w-8 h-8" />
-          </div>
-        )}
-        <div className={`absolute inset-0 bg-emerald-900/20 flex items-center justify-center transition-opacity pointer-events-none ${item.image ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
-          <span className="text-xs font-medium text-white">Upload Image</span>
+      {/* Trip Header */}
+      <div className="p-4 flex items-center gap-4 bg-emerald-50/30">
+        <div 
+          className="text-muted-foreground cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-emerald-50 rounded-md transition-colors"
+          {...attributes} 
+          {...listeners}
+        >
+          <GripVertical className="w-5 h-5" />
         </div>
 
-      </div>
-      <input 
-        id={`store-image-${item.id}`}
-        type="file" 
-        accept="image/*" 
-        className="hidden" 
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          if (file.size > 2 * 1024 * 1024) { toast.error("File too large"); return; }
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const newItems = [...user.storeItems];
-            newItems[index].image = reader.result as string;
-            setUser({ ...user, storeItems: newItems });
-          };
-          reader.readAsDataURL(file);
-        }}
-      />
-      <div className="flex-1 space-y-3 w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input 
-            placeholder="Product Title *" 
-            value={item.title} 
+            placeholder="Trip Title (e.g. Bali 2024)" 
+            value={trip.title} 
             onChange={e => {
-              const newItems = [...user.storeItems];
-              newItems[index].title = e.target.value;
-              setUser({ ...user, storeItems: newItems });
+              const newTrips = [...user.trips];
+              newTrips[index].title = e.target.value;
+              setUser({ ...user, trips: newTrips });
             }}
-            className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+            className="bg-white border-emerald-100 focus:border-emerald-500"
           />
           <Input 
-            placeholder="Price *" 
-            value={item.price} 
+            placeholder="Date (e.g. Aug 2024)" 
+            value={trip.date || ''} 
             onChange={e => {
-              const newItems = [...user.storeItems];
-              newItems[index].price = e.target.value;
-              setUser({ ...user, storeItems: newItems });
+              const newTrips = [...user.trips];
+              newTrips[index].date = e.target.value;
+              setUser({ ...user, trips: newTrips });
             }}
-            className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
+            className="bg-white border-emerald-100 focus:border-emerald-500"
           />
         </div>
 
-        <Input 
-          placeholder="Product Link" 
-          value={item.url || ''} 
-          onChange={e => {
-            const newItems = [...user.storeItems];
-            newItems[index].url = e.target.value;
-            setUser({ ...user, storeItems: newItems });
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-emerald-600 hover:bg-emerald-50"
+        >
+          {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+        </Button>
+
+        <Button 
+          size="icon" 
+          variant="ghost" 
+          className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
+          onClick={() => {
+            if (confirm("Are you sure you want to delete this trip?")) {
+              const newTrips = [...user.trips];
+              newTrips.splice(index, 1);
+              setUser({ ...user, trips: newTrips });
+            }
           }}
-          className="bg-white/50 border-emerald-100 text-xs font-mono focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
-        />
-        <div className="flex items-center gap-2 mt-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium border border-emerald-100">
-            <BarChart2 className="w-3 h-3" />
-            <span>{item.clicks || 0} clicks</span>
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Trip Items (Expanded) */}
+      {isExpanded && (
+        <div className="p-4 border-t border-emerald-100 space-y-4 bg-white">
+          <div className="space-y-2">
+            {trip.items.map((item, itemIndex) => (
+              <div key={item.id} className="flex items-center gap-3 pl-8 relative group">
+                {/* Connector Line */}
+                <div className="absolute left-4 top-0 bottom-0 w-px bg-emerald-100" />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-200" />
+
+                <div className="flex-1 flex gap-3 items-center">
+                  {item.type === 'header' ? (
+                    <div className="flex-1 flex items-center gap-2">
+                       <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded uppercase tracking-wider">Day/Tag</span>
+                       <Input 
+                         placeholder="Header Title (e.g. Day 1: Arrival)" 
+                         value={item.title}
+                         onChange={(e) => updateTripItem(itemIndex, { title: e.target.value })}
+                         className="font-medium border-emerald-100 bg-emerald-50/50"
+                       />
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex gap-2">
+                      <Input 
+                         placeholder="Place Name" 
+                         value={item.title}
+                         onChange={(e) => updateTripItem(itemIndex, { title: e.target.value })}
+                         className="flex-1 border-emerald-100"
+                       />
+                       <Input 
+                         placeholder="URL" 
+                         value={item.url || ''}
+                         onChange={(e) => updateTripItem(itemIndex, { url: e.target.value })}
+                         className="flex-1 border-emerald-100 font-mono text-xs"
+                       />
+                    </div>
+                  )}
+                  
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeTripItem(itemIndex)}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2 pl-8 pt-2">
+            <Button size="sm" variant="outline" onClick={() => addTripItem('header')} className="text-xs border-dashed border-emerald-300 text-emerald-600 hover:bg-emerald-50">
+              <Plus className="w-3 h-3 mr-1" /> Add Day/Tag
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => addTripItem('link')} className="text-xs border-dashed border-emerald-300 text-emerald-600 hover:bg-emerald-50">
+              <Plus className="w-3 h-3 mr-1" /> Add Place/Link
+            </Button>
           </div>
         </div>
-      </div>
-      <Button 
-        size="icon" 
-        variant="ghost" 
-        className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
-        onClick={() => {
-          const newItems = [...user.storeItems];
-          newItems.splice(index, 1);
-          setUser({ ...user, storeItems: newItems });
-        }}
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      )}
     </div>
   );
 }
@@ -497,7 +542,7 @@ const normalizeSocialUrl = (platform: string, value: string) => {
 export default function Dashboard() {
   const [user, setUser] = useState<UserData | null>(null);
   const [username, setUsername] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'shop' | 'outfits' | 'appearance'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'trips' | 'appearance'>('profile');
   const [importUrl, setImportUrl] = useState("");
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -586,7 +631,6 @@ export default function Dashboard() {
     if (!over || !user) return;
 
     if (active.id !== over.id) {
-      // Check if it's a link or store item based on active tab or ID existence
       if (activeTab === 'links') {
         const oldIndex = user.links.findIndex((item) => item.id === active.id);
         const newIndex = user.links.findIndex((item) => item.id === over.id);
@@ -596,13 +640,13 @@ export default function Dashboard() {
             links: arrayMove(user.links, oldIndex, newIndex),
           });
         }
-      } else if (activeTab === 'shop') {
-        const oldIndex = user.storeItems.findIndex((item) => item.id === active.id);
-        const newIndex = user.storeItems.findIndex((item) => item.id === over.id);
+      } else if (activeTab === 'trips') {
+        const oldIndex = user.trips.findIndex((item) => item.id === active.id);
+        const newIndex = user.trips.findIndex((item) => item.id === over.id);
         if (oldIndex !== -1 && newIndex !== -1) {
           setUser({
             ...user,
-            storeItems: arrayMove(user.storeItems, oldIndex, newIndex),
+            trips: arrayMove(user.trips, oldIndex, newIndex),
           });
         }
       }
@@ -614,18 +658,16 @@ export default function Dashboard() {
     if (fetchedUser) {
       // Ensure all items have IDs
       const linksWithIds = (fetchedUser.links || []).map((l: any) => ({ ...l, id: l._id || l.id || generateId() }));
-      const storeItemsWithIds = (fetchedUser.storeItems || []).map((s: any) => ({ ...s, id: s._id || s.id || generateId() }));
-      const outfitsWithIds = (fetchedUser.outfits || []).map((o: any) => ({
-        ...o,
-        id: o._id || o.id || generateId(),
-        items: (o.items || []).map((i: any) => ({ ...i, id: i._id || i.id || generateId() }))
+      const tripsWithIds = (fetchedUser.trips || []).map((t: any) => ({
+        ...t,
+        id: t._id || t.id || generateId(),
+        items: (t.items || []).map((i: any) => ({ ...i, id: i._id || i.id || generateId() }))
       }));
       
       setUser({ 
         ...fetchedUser, 
         links: linksWithIds,
-        storeItems: storeItemsWithIds,
-        outfits: outfitsWithIds
+        trips: tripsWithIds
       });
     }
   }, [fetchedUser]);
@@ -682,36 +724,12 @@ export default function Dashboard() {
       return;
     }
 
-    // Validate Shop
-    const invalidShopItem = user.storeItems.find(i => !i.title.trim() || !i.price.trim());
-    if (invalidShopItem) {
-      toast.warning("All shop items must have a title and price");
-      setActiveTab('shop');
+    // Validate Trips
+    const invalidTrip = user.trips.find(t => !t.title.trim());
+    if (invalidTrip) {
+      toast.warning("All trips must have a title");
+      setActiveTab('trips');
       return;
-    }
-
-    // Validate Outfits
-    const invalidOutfit = user.outfits?.find(o => !o.image);
-    if (invalidOutfit) {
-        toast.warning("All outfits must have an image");
-        setActiveTab('outfits');
-        return;
-    }
-
-    // Validate at least one item per outfit
-    const emptyOutfit = user.outfits?.find(o => o.items.length === 0);
-    if (emptyOutfit) {
-        toast.warning("Each outfit must have at least one tagged item");
-        setActiveTab('outfits');
-        return;
-    }
-    
-    // Validate Outfit Items
-    const invalidOutfitItem = user.outfits?.some(o => o.items.some(i => !i.title.trim() || !i.url.trim()));
-    if (invalidOutfitItem) {
-        toast.warning("All outfit items must have a title and URL");
-        setActiveTab('outfits');
-        return;
     }
 
     saveMutation.mutate(user);
@@ -773,8 +791,7 @@ export default function Dashboard() {
         {[
           { id: 'profile', label: 'Profile', icon: LayoutDashboard },
           { id: 'links', label: 'Links', icon: LinkIcon },
-          { id: 'shop', label: 'Shop', icon: ShoppingBag },
-          { id: 'outfits', label: 'Outfits', icon: Shirt },
+          { id: 'trips', label: 'Trips', icon: Map },
           { id: 'appearance', label: 'Theme', icon: Palette },
         ].map((item) => (
           <button
@@ -810,8 +827,7 @@ export default function Dashboard() {
           {[
             { id: 'profile', label: 'Profile', icon: LayoutDashboard },
             { id: 'links', label: 'Links', icon: LinkIcon },
-            { id: 'shop', label: 'Shop', icon: ShoppingBag },
-            { id: 'outfits', label: 'Outfits', icon: Shirt },
+            { id: 'trips', label: 'Trips', icon: Map },
             { id: 'appearance', label: 'Appearance', icon: Palette },
           ].map((item) => (
             <button
@@ -868,209 +884,43 @@ export default function Dashboard() {
           {/* Tab Content */}
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            {/* OUTFITS TAB */}
-            {activeTab === 'outfits' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                   <h2 className="text-lg font-medium">My Outfits</h2>
-                   <Button 
-                     onClick={() => {
-                       const newOutfits = [...(user.outfits || [])];
-                       newOutfits.unshift({ id: generateId(), image: '', items: [] });
-                       setUser({ ...user, outfits: newOutfits });
-                     }}
-                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                   >
-                     <Plus className="w-4 h-4 mr-2" /> Add Outfit
-                   </Button>
+            {/* TRIPS TAB */}
+            {activeTab === 'trips' && (
+              <div className="space-y-4">
+                <div className="flex justify-end">
+                  <Button onClick={() => setUser({ ...user, trips: [{ id: generateId(), title: '', date: '', items: [] }, ...user.trips] })}>
+                    <Plus className="w-4 h-4 mr-2" /> Add Trip
+                  </Button>
                 </div>
-
-                <div className="space-y-6">
-                  {user.outfits?.map((outfit, index) => (
-                    <Card key={outfit.id} className="p-6 space-y-6 bg-white/60 backdrop-blur-sm border-emerald-100">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium text-emerald-900">Outfit #{user.outfits!.length - index}</h3>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="text-red-500 hover:bg-red-50"
-                          onClick={() => {
-                            const newOutfits = [...user.outfits!];
-                            newOutfits.splice(index, 1);
-                            setUser({ ...user, outfits: newOutfits });
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Image Area */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-muted-foreground">Outfit Photo <span className="text-red-500">*</span></label>
-                          <div 
-                            className="relative aspect-[3/4] bg-muted rounded-xl overflow-hidden border-2 border-dashed border-emerald-200 group"
-                          >
-                             {outfit.image ? (
-                               <>
-                                 <img 
-                                   src={outfit.image} 
-                                   alt="Outfit" 
-                                   className="w-full h-full object-cover cursor-crosshair"
-                                   onClick={(e) => {
-                                      if (outfit.items.length >= 3) {
-                                        toast.error("Max 3 items per outfit");
-                                        return;
-                                      }
-                                      const rect = e.currentTarget.getBoundingClientRect();
-                                      const x = ((e.clientX - rect.left) / rect.width) * 100;
-                                      const y = ((e.clientY - rect.top) / rect.height) * 100;
-                                      
-                                      const newOutfits = [...user.outfits!];
-                                      newOutfits[index].items.push({
-                                        id: generateId(),
-                                        title: '',
-                                        url: '',
-                                        x,
-                                        y
-                                      });
-                                      setUser({ ...user, outfits: newOutfits });
-                                   }}
-                                 />
-                                 {/* Dots */}
-                                 {outfit.items.map((item, itemIndex) => (
-                                   <div
-                                     key={item.id}
-                                     style={{ left: `${item.x}%`, top: `${item.y}%` }}
-                                     className="absolute w-6 h-6 -ml-3 -mt-3 bg-white rounded-full shadow-lg border-2 border-emerald-500 flex items-center justify-center text-[10px] font-bold text-emerald-700 cursor-pointer hover:scale-110 transition-transform"
-                                     title={item.title || 'New Item'}
-                                   >
-                                     {itemIndex + 1}
-                                   </div>
-                                 ))}
-                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    <span className="text-white text-sm font-medium">Click image to add tag</span>
-                                 </div>
-                               </>
-                             ) : (
-                               <div 
-                                 className="w-full h-full flex flex-col items-center justify-center text-emerald-500 cursor-pointer hover:bg-emerald-50 transition-colors"
-                                 onClick={() => document.getElementById(`outfit-upload-${outfit.id}`)?.click()}
-                               >
-                                 <ImageIcon className="w-8 h-8 mb-2" />
-                                 <span className="text-sm">Upload Photo</span>
-                               </div>
-                             )}
-                             <input 
-                                id={`outfit-upload-${outfit.id}`}
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  if (file.size > 5 * 1024 * 1024) { toast.error("File too large (max 5MB)"); return; }
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => {
-                                    const newOutfits = [...user.outfits!];
-                                    newOutfits[index].image = reader.result as string;
-                                    setUser({ ...user, outfits: newOutfits });
-                                  };
-                                  reader.readAsDataURL(file);
-                                }}
-                             />
-                          </div>
-                          {outfit.image && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="w-full"
-                              onClick={() => document.getElementById(`outfit-upload-${outfit.id}`)?.click()}
-                            >
-                              Change Photo
-                            </Button>
-                          )}
-                        </div>
-
-                        {/* Items List */}
-                        <div className="space-y-4">
-                           <div className="flex items-center justify-between">
-                             <label className="text-sm font-medium text-muted-foreground">Tagged Items ({outfit.items.length}/3) <span className="text-red-500">*</span></label>
-                             <span className="text-xs text-emerald-600">Click photo to add</span>
-                           </div>
-                           
-                           {outfit.items.length === 0 ? (
-                             <div className="text-center py-8 bg-muted/50 rounded-xl border border-dashed border-emerald-100 text-muted-foreground text-sm">
-                               Tap anywhere on the photo to tag an item
-                             </div>
-                           ) : (
-                             <div className="space-y-3">
-                               {outfit.items.map((item, itemIndex) => (
-                                 <div key={item.id} className="bg-white p-3 rounded-lg border border-emerald-100 shadow-sm space-y-2">
-                                    <div className="flex items-center gap-2">
-                                       <div className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0">
-                                         {itemIndex + 1}
-                                       </div>
-                                       <Input 
-                                         placeholder="Item Name * (e.g. White Tee)"
-                                         value={item.title}
-                                         onChange={(e) => {
-                                            const newOutfits = [...user.outfits!];
-                                            newOutfits[index].items[itemIndex].title = e.target.value;
-                                            setUser({ ...user, outfits: newOutfits });
-                                         }}
-                                         className="h-8 text-sm"
-                                       />
-                                       <Button
-                                         size="icon"
-                                         variant="ghost"
-                                         className="h-8 w-8 text-red-500 hover:bg-red-50"
-                                         onClick={() => {
-                                            const newOutfits = [...user.outfits!];
-                                            newOutfits[index].items.splice(itemIndex, 1);
-                                            setUser({ ...user, outfits: newOutfits });
-                                         }}
-                                       >
-                                         <Trash2 className="w-3 h-3" />
-                                       </Button>
-                                    </div>
-                                    <Input 
-                                       placeholder="Link URL *"
-                                       value={item.url}
-                                       onChange={(e) => {
-                                          const newOutfits = [...user.outfits!];
-                                          newOutfits[index].items[itemIndex].url = e.target.value;
-                                          setUser({ ...user, outfits: newOutfits });
-                                       }}
-                                       className="h-8 text-xs font-mono"
-                                    />
-                                 </div>
-                               ))}
-                             </div>
-                           )}
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                  
-                  {(!user.outfits || user.outfits.length === 0) && (
-                    <div className="text-center py-12 bg-white/50 rounded-xl border border-dashed border-emerald-200">
-                       <Shirt className="w-12 h-12 mx-auto text-emerald-200 mb-4" />
-                       <h3 className="text-lg font-medium text-emerald-900">No outfits yet</h3>
-                       <p className="text-muted-foreground mb-4">Share your look with your followers</p>
-                       <Button 
-                         onClick={() => {
-                           const newOutfits = [...(user.outfits || [])];
-                           newOutfits.unshift({ id: generateId(), image: '', items: [] });
-                           setUser({ ...user, outfits: newOutfits });
-                         }}
-                         className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                       >
-                         <Plus className="w-4 h-4 mr-2" /> Create First Outfit
-                       </Button>
+                
+                <DndContext 
+                  sensors={sensors} 
+                  collisionDetection={closestCenter} 
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={user.trips.map(item => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-3">
+                      {user.trips.map((trip, i) => (
+                        <SortableTrip 
+                          key={trip.id} 
+                          trip={trip} 
+                          index={i} 
+                          user={user} 
+                          setUser={setUser} 
+                        />
+                      ))}
                     </div>
-                  )}
-                </div>
+                  </SortableContext>
+                </DndContext>
+
+                {user.trips.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+                    No trips added yet
+                  </div>
+                )}
               </div>
             )}
             
@@ -1276,39 +1126,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* SHOP TAB */}
-            {activeTab === 'shop' && (
-              <div className="space-y-4">
-                <div className="flex justify-end">
-                  <Button onClick={() => setUser({ ...user, storeItems: [{ id: generateId(), title: '', price: '', image: '', url: '' }, ...user.storeItems] })}>
-                    <Plus className="w-4 h-4 mr-2" /> Add Product
-                  </Button>
-                </div>
-                
-                <DndContext 
-                  sensors={sensors} 
-                  collisionDetection={closestCenter} 
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext 
-                    items={user.storeItems.map(item => item.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="space-y-3">
-                      {user.storeItems.map((item, i) => (
-                        <SortableStoreItem 
-                          key={item.id} 
-                          item={item} 
-                          index={i} 
-                          user={user} 
-                          setUser={setUser} 
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              </div>
-            )}
+
 
             {/* APPEARANCE TAB */}
             {activeTab === 'appearance' && (

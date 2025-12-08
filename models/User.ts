@@ -28,6 +28,21 @@ export interface ISocialLinks {
   email?: string;
 }
 
+export interface ITripItem {
+  id: string;
+  type: 'link' | 'header';
+  title: string;
+  url?: string;
+  clicks?: number;
+}
+
+export interface ITrip {
+  id: string;
+  title: string;
+  date?: string;
+  items: ITripItem[];
+}
+
 export interface IUser {
   _id?: mongoose.Types.ObjectId;
   username?: string;
@@ -36,10 +51,11 @@ export interface IUser {
   bio?: string;
   image?: string;
   links?: ILink[];
-  storeItems?: IStoreItem[];
+  storeItems?: IStoreItem[]; // Deprecated
   socialLinks?: ISocialLinks;
   themeColor?: string;
-  outfits?: IOutfit[];
+  outfits?: IOutfit[]; // Deprecated
+  trips?: ITrip[];
   createdAt?: Date;
   password?: string;
 }
@@ -73,6 +89,21 @@ const StoreItemSchema = new Schema<IStoreItem>({
   clicks: { type: Number, default: 0 },
 });
 
+const TripItemSchema = new Schema<ITripItem>({
+  id: { type: String, required: true },
+  type: { type: String, enum: ['link', 'header'], required: true },
+  title: { type: String, required: true },
+  url: { type: String },
+  clicks: { type: Number, default: 0 },
+});
+
+const TripSchema = new Schema<ITrip>({
+  id: { type: String, required: true },
+  title: { type: String, required: true },
+  date: { type: String },
+  items: { type: [TripItemSchema], default: [] },
+});
+
 const OutfitItemSchema = new Schema<IOutfitItem>({
   id: { type: String, required: true },
   title: { type: String, required: true },
@@ -96,6 +127,7 @@ const UserSchema = new Schema<IUser>({
   links: { type: [LinkSchema], default: [] },
   storeItems: { type: [StoreItemSchema], default: [] },
   outfits: { type: [OutfitSchema], default: [] },
+  trips: { type: [TripSchema], default: [] },
   socialLinks: {
     instagram: { type: String, default: '' },
     twitter: { type: String, default: '' },

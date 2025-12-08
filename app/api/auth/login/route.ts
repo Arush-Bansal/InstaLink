@@ -30,8 +30,8 @@ export async function POST(request: Request) {
         bio: 'Welcome to my GrifiLinks profile!',
         image: '', // Default or placeholder
         links: DEFAULT_USER_DATA.links,
-        storeItems: DEFAULT_USER_DATA.storeItems
-      });
+        trips: DEFAULT_USER_DATA.trips
+      } as any) as any;
     }
 
     return NextResponse.json({ success: true, user });
