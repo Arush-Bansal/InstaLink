@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Instagram, Twitter, Globe, ShoppingBag, Mail, ArrowUpRight, Search, Share2, Youtube, Facebook, Pin, Shirt } from "lucide-react";
+import { iconMap } from "@/components/icons";
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import Fuse from "fuse.js";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 export interface LinkData {
   title: string;
   url: string;
+  icon?: string;
   _id?: string;
   id?: string; // For dashboard compatibility
 }
@@ -300,7 +302,10 @@ export default function ProfilePreview({ user, isPreview = false, onLinkClick }:
                     <div className="p-5 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center transition-colors bg-slate-100 text-slate-600 group-hover:bg-white group-hover:shadow-sm">
-                           <Globe className="w-5 h-5" />
+                           {(() => {
+                             const Icon = iconMap[link.icon || 'Globe'] || Globe;
+                             return <Icon className="w-5 h-5" />;
+                           })()}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-base truncate text-slate-900">{link.title}</h3>

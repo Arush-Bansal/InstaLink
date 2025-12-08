@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface ILink {
   title: string;
   url: string;
+  icon?: string;
   clicks?: number;
   _id?: string;
 }
@@ -60,6 +61,7 @@ export interface IOutfit {
 const LinkSchema = new Schema<ILink>({
   title: { type: String, required: true },
   url: { type: String, required: true },
+  icon: { type: String, default: 'Globe' },
   clicks: { type: Number, default: 0 },
 });
 

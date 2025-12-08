@@ -100,12 +100,19 @@ export const authOptions: NextAuthOptions = {
               return "/login?error=AccountExistsWithPassword";
             }
           } else {
-            await User.create({
-              email,
-              image: user.image || DEFAULT_PROFILE_IMAGE,
-              title: user.name || "New User",
-              ...DEFAULT_USER_DATA,
-            } as any);
+            console.log("Creating new user for:", email);
+            try {
+              const newUser = await User.create({
+                email,
+                image: user.image || DEFAULT_PROFILE_IMAGE,
+                title: user.name || "New User",
+                ...DEFAULT_USER_DATA,
+              } as any);
+              console.log("User created successfully:", newUser._id);
+            } catch (createError) {
+              console.error("Detailed error creating user:", createError);
+              throw createError; // Re-throw to be caught by outer catch
+            }
           }
           return true;
         } catch (error) {

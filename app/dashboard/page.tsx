@@ -35,6 +35,7 @@ import {
   Shirt,
   GripVertical
 } from "lucide-react";
+import { iconMap, iconNames } from "@/components/icons";
 import { toast } from "sonner";
 import Image from "next/image";
 import ProfilePreview from "@/components/ProfilePreview";
@@ -64,6 +65,7 @@ interface Link {
   id: string;
   title: string;
   url: string;
+  icon?: string;
   clicks?: number;
 }
 
@@ -194,12 +196,21 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
     isDragging
   } = useSortable({ id: link.id });
 
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [iconSearch, setIconSearch] = useState("");
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 10 : 1,
+    zIndex: isDragging ? 10 : (showIconPicker ? 50 : 1),
     opacity: isDragging ? 0.5 : 1,
   };
+
+  const IconComponent = iconMap[link.icon || 'Globe'] || iconMap.Globe;
+
+  const filteredIcons = iconNames.filter(name => 
+    name.toLowerCase().includes(iconSearch.toLowerCase())
+  );
 
   return (
     <div 
@@ -214,6 +225,62 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
       >
         <GripVertical className="w-5 h-5" />
       </div>
+      
+      {/* Icon Picker */}
+      <div className="relative">
+        <button 
+          onClick={() => setShowIconPicker(!showIconPicker)}
+          className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition-colors"
+        >
+          <IconComponent className="w-5 h-5" />
+        </button>
+
+        {showIconPicker && (
+          <>
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setShowIconPicker(false)}
+            />
+            <div className="absolute top-12 left-0 z-50 w-72 bg-white rounded-xl shadow-xl border border-emerald-100 p-4 animate-in fade-in zoom-in-95 duration-200">
+              <div className="mb-3 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                <Input 
+                  placeholder="Search icons..." 
+                  value={iconSearch}
+                  onChange={(e) => setIconSearch(e.target.value)}
+                  className="h-8 pl-8 text-xs bg-slate-50"
+                  autoFocus
+                />
+              </div>
+              <div className="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-100">
+                {filteredIcons.map(name => {
+                  const Icon = iconMap[name];
+                  return (
+                    <button
+                      key={name}
+                      onClick={() => {
+                        const newLinks = [...user.links];
+                        newLinks[index].icon = name;
+                        setUser({ ...user, links: newLinks });
+                        setShowIconPicker(false);
+                      }}
+                      className={`p-2 rounded-lg flex items-center justify-center transition-all ${
+                        link.icon === name 
+                          ? 'bg-emerald-100 text-emerald-700' 
+                          : 'hover:bg-slate-50 text-slate-500 hover:text-slate-900'
+                      }`}
+                      title={name}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
       <div className="flex-1 space-y-3">
         <div className="flex justify-between items-center">
            <Input 
@@ -226,7 +293,6 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
              }}
              className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
            />
-
         </div>
         <Input 
           placeholder="URL (https://...)" 
@@ -1116,7 +1182,7 @@ export default function Dashboard() {
 
                 <div className="space-y-4">
                   <div className="flex justify-end">
-                    <Button onClick={() => setUser({ ...user, links: [{ id: generateId(), title: '', url: '' }, ...user.links] })}>
+                    <Button onClick={() => setUser({ ...user, links: [{ id: generateId(), title: '', url: '', icon: 'Globe' }, ...user.links] })}>
                       <Plus className="w-4 h-4 mr-2" /> Add Link
                     </Button>
                   </div>

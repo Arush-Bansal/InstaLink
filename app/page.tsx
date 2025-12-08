@@ -45,6 +45,10 @@ function HomeContent() {
     } else if (error === 'AccountExistsWithPassword') {
        setView('login');
        setAuthError('Account exists with password. Please sign in with your email and password.');
+    } else if (error === 'AccessDenied') {
+       toast.error('Access denied. Please try again.');
+    } else if (error) {
+       toast.error(`Authentication error: ${error}`);
     }
   }, [searchParams]);
 
