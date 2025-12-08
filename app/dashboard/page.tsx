@@ -32,7 +32,8 @@ import {
   Pin, // For Pinterest
   BarChart2,
   Search,
-  Shirt
+  Shirt,
+  GripVertical
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -204,14 +205,14 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="flex gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 group hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
+      className="flex gap-4 items-center bg-white/80 p-4 rounded-xl border border-emerald-100 group hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
     >
       <div 
-        className="mt-3 text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
+        className="text-muted-foreground cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-emerald-50 rounded-md transition-colors"
         {...attributes} 
         {...listeners}
       >
-        <Settings className="w-4 h-4" />
+        <GripVertical className="w-5 h-5" />
       </div>
       <div className="flex-1 space-y-3">
         <div className="flex justify-between items-center">
@@ -281,22 +282,23 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="flex flex-col sm:flex-row gap-4 items-start bg-white/80 p-4 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
+      className="flex flex-col sm:flex-row gap-4 sm:items-center items-start bg-white/80 p-4 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300"
     >
       <div 
-        className="w-full sm:w-24 h-48 sm:h-24 rounded-lg bg-muted border border-border overflow-hidden relative shrink-0 group cursor-pointer touch-none"
-        {...attributes}
+        className="text-muted-foreground cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-emerald-50 rounded-md transition-colors"
+        {...attributes} 
         {...listeners}
+      >
+        <GripVertical className="w-5 h-5" />
+      </div>
+
+      <div 
+        className="w-full sm:w-24 h-48 sm:h-24 rounded-lg bg-muted border border-border overflow-hidden relative shrink-0 group cursor-pointer"
       >
          {/* Separate click handler for image upload vs drag */}
          <div 
             className="absolute inset-0 z-10" 
             onClick={(e) => {
-               // If it was a drag, don't trigger click. 
-               // But dnd-kit handles this mostly. 
-               // We need a way to trigger file upload.
-               // Let's use a small button for upload or double click?
-               // Or just rely on the fact that long press is drag, short click is click.
                document.getElementById(`store-image-${item.id}`)?.click();
             }}
          />
@@ -308,7 +310,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
           </div>
         )}
         <div className={`absolute inset-0 bg-emerald-900/20 flex items-center justify-center transition-opacity pointer-events-none ${item.image ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
-          <span className="text-xs font-medium text-white">Upload (Click) <br/> Move (Hold)</span>
+          <span className="text-xs font-medium text-white">Upload Image</span>
         </div>
 
       </div>
@@ -330,7 +332,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
           reader.readAsDataURL(file);
         }}
       />
-      <div className="flex-1 space-y-3">
+      <div className="flex-1 space-y-3 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input 
             placeholder="Product Title" 
