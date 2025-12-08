@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
-import { authOptions } from "@/lib/auth";
+import { authOptions, DEFAULT_USER_DATA } from "@/lib/auth";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -63,13 +63,20 @@ export async function POST(request: Request) {
     // If storeItems were empty (because we created user with just email), we might want to populate them.
     // But $setOnInsert only works on insert.
     // Let's just check and update.
-    if (user && (!user.storeItems || user.storeItems.length === 0)) {
-        user.storeItems = [
-            { title: "Floral Summer Dress", price: "₹1,499", image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop", url: "#" },
-            { title: "Designer Handbag", price: "₹2,999", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop", url: "#" },
-            { title: "Chic Sunglasses", price: "₹999", image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop", url: "#" }
-        ];
-        await user.save();
+    if (user) {
+        let changed = false;
+        if (!user.storeItems || user.storeItems.length === 0) {
+            user.storeItems = DEFAULT_USER_DATA.storeItems;
+            changed = true;
+        }
+        if (!user.links || user.links.length === 0) {
+            user.links = DEFAULT_USER_DATA.links;
+            changed = true;
+        }
+        
+        if (changed) {
+            await user.save();
+        }
     }
 
     return NextResponse.json({ success: true, username: cleanUsername });

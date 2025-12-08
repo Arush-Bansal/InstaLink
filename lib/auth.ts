@@ -9,12 +9,12 @@ import bcrypt from "bcryptjs";
 
 const DEFAULT_PROFILE_IMAGE = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop";
 
-const DEFAULT_USER_DATA = {
+export const DEFAULT_USER_DATA = {
   bio: "Fashion & Lifestyle Creator 🇮🇳 | Sharing my style journey",
   links: [
-    { title: "My Myntra Finds", url: "https://www.myntra.com" },
-    { title: "Amazon Favorites", url: "https://www.amazon.in" },
-    { title: "Latest YouTube Vlog", url: "https://youtube.com" }
+    { title: "My Myntra Finds", url: "https://www.myntra.com", icon: "ShoppingBag" },
+    { title: "Amazon Favorites", url: "https://www.amazon.in", icon: "Star" },
+    { title: "Latest YouTube Vlog", url: "https://youtube.com", icon: "Youtube" }
   ],
   storeItems: [
     { title: "Floral Summer Dress", price: "₹1,499", image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop", url: "#" },

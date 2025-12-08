@@ -3,10 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import Image from "next/image";
+
+// UI Components
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { toast } from "sonner";
+import ProfilePreview from "@/components/ProfilePreview";
+
+// Icons
 import { 
   LayoutDashboard, 
   Link as LinkIcon, 
@@ -36,10 +43,11 @@ import {
   GripVertical
 } from "lucide-react";
 import { iconMap, iconNames } from "@/components/icons";
-import { toast } from "sonner";
-import Image from "next/image";
-import ProfilePreview from "@/components/ProfilePreview";
+
+// Data Fetching
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+// Drag & Drop
 import {
   DndContext, 
   closestCenter,
@@ -284,7 +292,7 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
       <div className="flex-1 space-y-3">
         <div className="flex justify-between items-center">
            <Input 
-             placeholder="Link Title" 
+             placeholder="Link Title *" 
              value={link.title} 
              onChange={e => {
                const newLinks = [...user.links];
@@ -295,7 +303,7 @@ function SortableLink({ link, index, user, setUser }: { link: Link, index: numbe
            />
         </div>
         <Input 
-          placeholder="URL (https://...)" 
+          placeholder="URL (https://...) *" 
           value={link.url} 
           onChange={e => {
             const newLinks = [...user.links];
@@ -401,7 +409,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
       <div className="flex-1 space-y-3 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input 
-            placeholder="Product Title" 
+            placeholder="Product Title *" 
             value={item.title} 
             onChange={e => {
               const newItems = [...user.storeItems];
@@ -411,7 +419,7 @@ function SortableStoreItem({ item, index, user, setUser }: { item: StoreItem, in
             className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
           />
           <Input 
-            placeholder="Price" 
+            placeholder="Price *" 
             value={item.price} 
             onChange={e => {
               const newItems = [...user.storeItems];
@@ -657,7 +665,56 @@ export default function Dashboard() {
   });
 
   const handleSave = () => {
-    if (user) saveMutation.mutate(user);
+    if (!user) return;
+
+    // Validate Profile
+    if (!user.title.trim()) {
+      toast.warning("Display Name is required");
+      setActiveTab('profile');
+      return;
+    }
+
+    // Validate Links
+    const invalidLink = user.links.find(l => !l.title.trim() || !l.url.trim());
+    if (invalidLink) {
+      toast.warning("All links must have a title and URL");
+      setActiveTab('links');
+      return;
+    }
+
+    // Validate Shop
+    const invalidShopItem = user.storeItems.find(i => !i.title.trim() || !i.price.trim());
+    if (invalidShopItem) {
+      toast.warning("All shop items must have a title and price");
+      setActiveTab('shop');
+      return;
+    }
+
+    // Validate Outfits
+    const invalidOutfit = user.outfits?.find(o => !o.image);
+    if (invalidOutfit) {
+        toast.warning("All outfits must have an image");
+        setActiveTab('outfits');
+        return;
+    }
+
+    // Validate at least one item per outfit
+    const emptyOutfit = user.outfits?.find(o => o.items.length === 0);
+    if (emptyOutfit) {
+        toast.warning("Each outfit must have at least one tagged item");
+        setActiveTab('outfits');
+        return;
+    }
+    
+    // Validate Outfit Items
+    const invalidOutfitItem = user.outfits?.some(o => o.items.some(i => !i.title.trim() || !i.url.trim()));
+    if (invalidOutfitItem) {
+        toast.warning("All outfit items must have a title and URL");
+        setActiveTab('outfits');
+        return;
+    }
+
+    saveMutation.mutate(user);
   };
 
   useEffect(() => {
@@ -850,7 +907,7 @@ export default function Dashboard() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Image Area */}
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-muted-foreground">Outfit Photo</label>
+                          <label className="text-sm font-medium text-muted-foreground">Outfit Photo <span className="text-red-500">*</span></label>
                           <div 
                             className="relative aspect-[3/4] bg-muted rounded-xl overflow-hidden border-2 border-dashed border-emerald-200 group"
                           >
@@ -938,7 +995,7 @@ export default function Dashboard() {
                         {/* Items List */}
                         <div className="space-y-4">
                            <div className="flex items-center justify-between">
-                             <label className="text-sm font-medium text-muted-foreground">Tagged Items ({outfit.items.length}/3)</label>
+                             <label className="text-sm font-medium text-muted-foreground">Tagged Items ({outfit.items.length}/3) <span className="text-red-500">*</span></label>
                              <span className="text-xs text-emerald-600">Click photo to add</span>
                            </div>
                            
@@ -955,7 +1012,7 @@ export default function Dashboard() {
                                          {itemIndex + 1}
                                        </div>
                                        <Input 
-                                         placeholder="Item Name (e.g. White Tee)"
+                                         placeholder="Item Name * (e.g. White Tee)"
                                          value={item.title}
                                          onChange={(e) => {
                                             const newOutfits = [...user.outfits!];
@@ -978,7 +1035,7 @@ export default function Dashboard() {
                                        </Button>
                                     </div>
                                     <Input 
-                                       placeholder="Link URL"
+                                       placeholder="Link URL *"
                                        value={item.url}
                                        onChange={(e) => {
                                           const newOutfits = [...user.outfits!];
@@ -1059,7 +1116,7 @@ export default function Dashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Display Name</label>
+                    <label className="text-sm font-medium text-muted-foreground">Display Name <span className="text-red-500">*</span></label>
                     <Input value={user.title} onChange={e => setUser({...user, title: e.target.value})} className="bg-white/50 border-emerald-100 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all" />
                   </div>
                   

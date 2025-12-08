@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import { DEFAULT_USER_DATA } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -28,13 +29,8 @@ export async function POST(request: Request) {
         title: `@${cleanUsername}`,
         bio: 'Welcome to my GrifiLinks profile!',
         image: '', // Default or placeholder
-        links: [],
-        storeItems: [
-           // Add some default store items for the demo
-           { title: 'Minimalist Tee', price: '$35.00', image: '/store/tshirt.png', url: '#' },
-           { title: 'Abstract Print', price: '$120.00', image: '/store/art.png', url: '#' },
-           { title: 'Digital Asset Pack', price: '$49.00', image: '/store/pack.png', url: '#' }
-        ]
+        links: DEFAULT_USER_DATA.links,
+        storeItems: DEFAULT_USER_DATA.storeItems
       });
     }
 
